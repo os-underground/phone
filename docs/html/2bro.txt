@@ -1,0 +1,499 @@
+<!--
+ZIP & Folder Reader + Encryptor (single-file)
+
+What this file contains:
+- A browser-based tool (pure HTML+JS) that:
+  * Lets you open a .zip file locally (no upload to servers)
+  * Shows a file tree and lets you view text files in the browser
+  * Lets you download individual files
+  * Lets you split large files into chunks (default 25 MB) for manual upload
+  * Lets you encrypt/decrypt files using a password (AES-GCM, client-side)
+
+- Also includes (inside commented <pre> blocks) ready-to-use scripts:
+  * Bash: unzip, split into 25MB chunks, reassemble
+  * Python: recursively read repository folder and print files / read a specific extension
+  * GitHub Actions example: unzip on push and store artifact
+  * Notes about Git LFS & privacy: recommendations (use private repo + encryption + secrets)
+
+How to use:
+1. Save this file as `zip-folder-reader-and-scripts.html` and open it in your browser (double-click or File > Open).
+2. Click "Open .zip" and pick a `.zip` file. The app runs locally — nothing is uploaded.
+3. Select files to view or download. Use "Split & download" to create 25MB parts.
+4. Use "Encrypt" before uploading to keep content private; share password with trusted people.
+
+Security note:
+- Encryption is client-side (Web Crypto). Keep your password safe; there's no recovery.
+- This tool avoids servers so you won't pay extra hosting costs.
+
+-->
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ZIP Reader · Ver, dividir, encriptar (local)</title>
+  <style>
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:12px}
+    header{display:flex;gap:12px;align-items:center}
+    main{display:grid;grid-template-columns:360px 1fr;gap:12px;margin-top:12px}
+    .panel{border:1px solid #ddd;border-radius:8px;padding:10px;min-height:320px;background:#fafafa}
+    ul{padding-left:18px}
+    button{padding:6px 10px;border-radius:6px;border:1px solid #bbb;background:#fff;cursor:pointer}
+    .file-item{display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid #eee}
+    label.inline{display:flex;gap:8px;align-items:center}
+    textarea{width:100%;height:320px;font-family:monospace}
+    .small{font-size:12px;color:#444}
+  </style>
+  <!-- JSZip & FileSaver (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body>
+  <header>
+    <h2>ZIP Reader · Local (no servers)</h2>
+    <div class="small">Abre .zip, visualiza archivos, divide en partes (25MB), encripta/desencripta</div>
+  </header>
+
+  <div>
+    <input id="zipInput" type="file" accept=".zip" />
+    <button id="clearBtn">Limpiar</button>
+    <label class="inline"><input id="showAll" type="checkbox"/> Mostrar archivos binarios</label>
+  </div>
+
+  <main>
+    <section class="panel">
+      <h3>Archivos en el ZIP</h3>
+      <div id="filesList" style="max-height:600px;overflow:auto"></div>
+      <hr />
+      <div>
+        <label>Buscar por extensión o nombre: <input id="filter" placeholder="ej: .html, .js, index"/></label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h3>Visor / Acciones</h3>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button id="downloadSelected">Descargar archivo seleccionado</button>
+        <button id="splitDownload">Dividir y descargar (25MB)</button>
+        <button id="encryptSelected">Encriptar y descargar (.enc)</button>
+        <input id="encPassword" placeholder="Contraseña para encriptar/desencriptar" style="flex:1" />
+      </div>
+      <div style="margin-bottom:8px">
+        <input id="openEncInput" type="file" accept=".enc" />
+        <button id="decryptEnc">Desencriptar archivo .enc</button>
+      </div>
+      <div>
+        <label>Contenido:</label>
+        <textarea id="viewer" readonly placeholder="Selecciona un archivo para ver su contenido aquí"></textarea>
+      </div>
+    </section>
+  </main>
+
+  <script>
+  // Utilities
+  const zipInput = document.getElementById('zipInput');
+  const filesList = document.getElementById('filesList');
+  const viewer = document.getElementById('viewer');
+  const filterInput = document.getElementById('filter');
+  const showAll = document.getElementById('showAll');
+
+  let currentZip = null; // JSZip instance
+  let entries = []; // {name, dir, async(fn)}
+  let selectedFileName = null;
+
+  zipInput.addEventListener('change', async (e)=>{
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    viewer.value = 'Cargando ZIP...';
+    try{
+      const ab = await f.arrayBuffer();
+      const zip = await JSZip.loadAsync(ab);
+      currentZip = zip;
+      entries = [];
+      zip.forEach((relativePath, file)=>{
+        entries.push({name: relativePath, file});
+      });
+      renderList();
+      viewer.value = 'ZIP cargado. Selecciona un archivo.';
+    }catch(err){
+      viewer.value = 'Error al leer ZIP: '+err.message;
+    }
+  });
+
+  function renderList(){
+    const q = (filterInput.value||"").toLowerCase();
+    filesList.innerHTML = '';
+    const filtered = entries.filter(e=>{
+      if(e.file.dir) return false; // omit directories
+      if(!showAll.checked){
+        // basic heuristic: only show text-like extensions
+        const textExt = ['.txt','.md','.json','.js','.py','.html','.css','.csv','.xml','.yml','.yaml','.mdx'];
+        if(!textExt.some(ext=>e.name.toLowerCase().endsWith(ext))) return false;
+      }
+      if(!q) return true;
+      return e.name.toLowerCase().includes(q);
+    });
+    filtered.sort((a,b)=>a.name.localeCompare(b.name));
+    if(filtered.length===0){ filesList.innerHTML = '<div class="small">Ningún archivo coincide.</div>'; return }
+
+    filtered.forEach(e=>{
+      const div = document.createElement('div'); div.className='file-item';
+      const left = document.createElement('div'); left.textContent = e.name;
+      const right = document.createElement('div');
+      const viewBtn = document.createElement('button'); viewBtn.textContent='Ver';
+      const dlBtn = document.createElement('button'); dlBtn.textContent='Descargar';
+      const splitBtn = document.createElement('button'); splitBtn.textContent='Dividir';
+      viewBtn.onclick = ()=>viewFile(e.name);
+      dlBtn.onclick = ()=>downloadFile(e.name);
+      splitBtn.onclick = ()=>downloadInChunks(e.name,25*1024*1024);
+      right.appendChild(viewBtn); right.appendChild(dlBtn); right.appendChild(splitBtn);
+      div.appendChild(left); div.appendChild(right);
+      filesList.appendChild(div);
+    });
+  }
+
+  filterInput.addEventListener('input', renderList);
+  document.getElementById('clearBtn').addEventListener('click',()=>{ zipInput.value=''; filesList.innerHTML=''; viewer.value=''; entries=[]; currentZip=null; });
+
+  async function viewFile(name){
+    if(!currentZip) return; selectedFileName = name;
+    const fileObj = currentZip.file(name);
+    if(!fileObj){ viewer.value='No se encontró el archivo.'; return }
+    try{
+      const text = await fileObj.async('string');
+      viewer.value = text;
+    }catch(err){
+      // binary or read error -> show info and offer to download
+      viewer.value = 'No se puede mostrar como texto (probablemente binario). Puedes descargarlo.';
+    }
+  }
+
+  async function downloadFile(name){
+    if(!currentZip) return; const fileObj = currentZip.file(name);
+    if(!fileObj) return alert('Archivo no encontrado');
+    const blob = await fileObj.async('blob');
+    saveBlob(blob, name.split('/').pop());
+  }
+
+  function saveBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }
+
+  async function downloadInChunks(name,chunkSize){
+    if(!currentZip) return; const fileObj = currentZip.file(name);
+    if(!fileObj) return alert('Archivo no encontrado');
+    const blob = await fileObj.async('blob');
+    const total = blob.size; const parts = Math.ceil(total/chunkSize);
+    const base = name.split('/').pop();
+    for(let i=0;i<parts;i++){
+      const start = i*chunkSize; const end = Math.min(total,(i+1)*chunkSize);
+      const piece = blob.slice(start,end);
+      const partName = `${base}.part${String(i+1).padStart(3,'0')}`;
+      saveBlob(piece, partName);
+    }
+    alert(`Se descargaron ${parts} partes. Reúnelas con cat o copy dependiendo de tu SO.`);
+  }
+
+  // Encryption helpers: derive key from password (PBKDF2) and use AES-GCM
+  async function deriveKey(password, salt){
+    const enc = new TextEncoder();
+    const pwKey = await crypto.subtle.importKey('raw', enc.encode(password), {name:'PBKDF2'}, false, ['deriveKey']);
+    const key = await crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'}, pwKey, {name:'AES-GCM', length:256}, true, ['encrypt','decrypt']);
+    return key;
+  }
+
+  async function encryptBlobWithPassword(blob, password){
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await deriveKey(password, salt);
+    const data = new Uint8Array(await blob.arrayBuffer());
+    const ciphertext = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, data);
+    // output format: salt(16) + iv(12) + ciphertext
+    const out = new Uint8Array(16 + 12 + ciphertext.byteLength);
+    out.set(salt,0); out.set(iv,16); out.set(new Uint8Array(ciphertext),28);
+    return new Blob([out], {type:'application/octet-stream'});
+  }
+
+  async function decryptBlobWithPassword(blob, password){
+    const arr = new Uint8Array(await blob.arrayBuffer());
+    const salt = arr.slice(0,16); const iv = arr.slice(16,28); const ct = arr.slice(28);
+    const key = await deriveKey(password, salt);
+    try{
+      const plain = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, ct);
+      return new Blob([plain]);
+    }catch(err){ throw new Error('Contraseña incorrecta o datos corruptos'); }
+  }
+
+  document.getElementById('encryptSelected').addEventListener('click', async ()=>{
+    const pw = document.getElementById('encPassword').value;
+    if(!pw) return alert('Pon una contraseña');
+    if(!selectedFileName) return alert('Selecciona o "Ver" un archivo primero');
+    const fileObj = currentZip.file(selectedFileName);
+    const blob = await fileObj.async('blob');
+    viewer.value = 'Encriptando...';
+    try{
+      const encBlob = await encryptBlobWithPassword(blob,pw);
+      const outName = selectedFileName.split('/').pop()+'.enc';
+      saveBlob(encBlob,outName);
+      viewer.value = 'Encriptado. Descargado: '+outName;
+    }catch(err){ viewer.value = 'Error encriptando: '+err.message }
+  });
+
+  document.getElementById('openEncInput').addEventListener('change',(e)=>{ /* file chosen */ });
+  document.getElementById('decryptEnc').addEventListener('click', async ()=>{
+    const f = document.getElementById('openEncInput').files && document.getElementById('openEncInput').files[0];
+    const pw = document.getElementById('encPassword').value;
+    if(!f) return alert('Selecciona un .enc para desencriptar');
+    if(!pw) return alert('Pon la contraseña usada');
+    viewer.value = 'Desencriptando...';
+    try{
+      const plain = await decryptBlobWithPassword(f,pw);
+      // try to detect text
+      try{
+        const txt = await plain.text();
+        viewer.value = txt;
+        saveBlob(plain, f.name.replace(/\.enc$/,'') || 'decrypted.bin');
+      }catch(_){
+        saveBlob(plain, f.name.replace(/\.enc$/,'') || 'decrypted.bin');
+        viewer.value = 'Desencriptado y descargado (binario).';
+      }
+    }catch(err){ viewer.value = 'Error: '+err.message }
+  });
+
+  // helper save all files (not used in UI but useful if you want to extract whole zip as downloads)
+  async function saveAllAsDownloads(){
+    for(const e of entries){ if(e.file.dir) continue; const blob = await e.file.async('blob'); saveBlob(blob, e.name.split('/').pop()); }
+  }
+
+  // poly: listen to file selection via 'Ver' to set selectedFileName
+  // (already done inside viewFile)
+
+  // End of browser logic
+  </script>
+
+  <hr />
+  <section class="panel">
+    <h3>Scripts & tips (copy/paste)</h3>
+
+    <h4>Bash — Descomprimir y dividir en 25MB</h4>
+    <pre>
+# Descomprimir
+unzip archivo.zip -d carpeta_destino
+
+# Dividir un archivo grande en partes de 25MB
+split -b 25M "carpeta_destino/archivo_grande.bin" "archivo_grande.bin.part"
+
+# Para recombinar en Linux / macOS
+cat archivo_grande.bin.part* &gt; archivo_grande_recompuesto.bin
+    </pre>
+
+    <h4>Python — leer recursivamente un directorio y filtrar por extensión</h4>
+    <pre>
+# python list_files.py
+import os
+
+def list_files(root, ext_filter=None):
+    for rootdir, dirs, files in os.walk(root):
+        for f in files:
+            if ext_filter and not f.lower().endswith(ext_filter.lower()):
+                continue
+            print(os.path.join(rootdir, f))
+
+if __name__ == '__main__':
+    import sys
+    root = sys.argv[1] if len(sys.argv)>1 else '.'
+    ext = sys.argv[2] if len(sys.argv)>2 else None
+    list_files(root, ext)
+    </pre>
+
+    <h4>GitHub Actions — ejemplo para descomprimir en CI y guardar artifact</h4>
+    <pre>
+# .github/workflows/unzip.yml
+name: Unzip on push
+on:
+  push:
+    paths:
+      - 'archivo.zip'
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descomprimir
+        run: |
+          unzip archivo.zip -d descomprimido
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: descomprimido
+          path: descomprimido/
+    </pre>
+
+    <h4>Consejos de privacidad y almacenamiento sin servidor</h4>
+    <ul>
+      <li>Usa repositorio privado en GitHub para que nadie pueda ver tus archivos públicamente.</li>
+      <li>Para archivos &gt; 25MB usa <strong>Git LFS</strong> (Git Large File Storage) o separa en partes y sube como artefactos.</li>
+      <li>Si no quieres que GitHub guarde archivos legibles, <strong>encríptalos antes de subir</strong> (el archivo .enc del HTML lo hace localmente).</li>
+      <li>Guarda claves/contraseñas en <em>GitHub Secrets</em> si usas Actions (no en el código).</li>
+    </ul>
+
+  </section>
+
+</body>
+  <!-- ADDED: Additional scripts, workflows y README (created on user request) -->
+  <section class="panel">
+    <h3>Entregables añadidos (scripts, workflows y README)</h3>
+    <p class="small">Aquí están los archivos que pediste — listos para copiar/pegar en tu repo. Hay dos rutas de trabajo: <strong>GPG + Bash (simple)</strong> y <strong>Node.js + Actions (automatizable y cross-platform)</strong>. Escoge la que prefieras.</p>
+
+    <h4>1) <code>encrypt-split.js</code> (Node.js) — zip + encripta (AES-256-GCM) + divide en partes</h4>
+    <pre>
+// encrypt-split.js
+// Requisitos: npm install archiver y node 14+
+// Uso: ENCRYPT_PASS="tuContraseña" node encrypt-split.js ~/mi_carpeta salida_prefix 25
+
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const archiver = require('archiver');
+
+async function zipFolder(folderPath, zipPath){
+  return new Promise((res, rej)=>{
+    const output = fs.createWriteStream(zipPath);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    output.on('close', ()=>res());
+    archive.on('error', err=>rej(err));
+    archive.pipe(output);
+    archive.directory(folderPath, false);
+    archive.finalize();
+  });
+}
+
+function deriveKey(password, salt){
+  return crypto.pbkdf2Sync(password, salt, 200000, 32, 'sha256');
+}
+
+async function encryptFile(inputPath, outPath, password){
+  const salt = crypto.randomBytes(16);
+  const iv = crypto.randomBytes(12);
+  const key = deriveKey(password, salt);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  const input = fs.readFileSync(inputPath);
+  const encrypted = Buffer.concat([cipher.update(input), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  // formato: salt (16) + iv (12) + ciphertext + authTag (16)
+  const out = Buffer.concat([salt, iv, encrypted, authTag]);
+  fs.writeFileSync(outPath, out);
+}
+
+function splitFile(filePath, prefix, chunkSizeMB){
+  const CHUNK = (chunkSizeMB || 25) * 1024 * 1024;
+  const stats = fs.statSync(filePath);
+  const total = stats.size;
+  const stream = fs.createReadStream(filePath, { highWaterMark: CHUNK });
+  let idx = 0;
+  stream.on('data', chunk =>{
+    idx++;
+    const partName = `${prefix}.part${String(idx).padStart(3,'0')}`;
+    fs.writeFileSync(partName, chunk);
+    console.log('Wrote', partName);
+  });
+  return new Promise((res, rej)=> stream.on('end', ()=>res()).on('error', e=>rej(e)) );
+}
+
+async function main(){
+  const args = process.argv.slice(2);
+  if(args.length < 2){
+    console.log('Usage: ENCRYPT_PASS="pw" node encrypt-split.js <folder> <outPrefix> [chunkMB=25]');
+    process.exit(1);
+  }
+  const folder = path.resolve(args[0]);
+  const outPrefix = args[1];
+  const chunkMB = parseInt(args[2]||'25',10);
+  const tmpZip = `${outPrefix}.zip`;
+  const tmpEnc = `${outPrefix}.enc`;
+  const pass = process.env.ENCRYPT_PASS || process.env.PASS || null;
+  if(!pass){ console.error('Set ENCRYPT_PASS env var'); process.exit(2); }
+  console.log('Zipping', folder);
+  await zipFolder(folder, tmpZip);
+  console.log('Encrypting to', tmpEnc);
+  await encryptFile(tmpZip, tmpEnc, pass);
+  console.log('Splitting into', chunkMB, 'MB parts');
+  await splitFile(tmpEnc, `${outPrefix}.enc`, chunkMB);
+  console.log('Cleaning tmp files');
+  fs.unlinkSync(tmpZip);
+  fs.unlinkSync(tmpEnc);
+  console.log('Done');
+}
+
+main().catch(err=>{ console.error(err); process.exit(1); });
+    </pre>
+
+    <h4>2) <code>decrypt-reassemble.js</code> (Node.js) — recombina partes y desencripta</h4>
+    <pre>
+// decrypt-reassemble.js
+// Uso: ENCRYPT_PASS="tuContraseña" node decrypt-reassemble.js encrypted_prefix.enc outFolder
+
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+
+function deriveKey(password, salt){
+  return crypto.pbkdf2Sync(password, salt, 200000, 32, 'sha256');
+}
+
+function reassemble(partsPattern, outPath){
+  // partsPattern: prefix.enc.part001, part002... (we glob by prefix)
+  const dir = process.cwd();
+  const files = fs.readdirSync(dir).filter(f => f.startsWith(partsPattern) && f.includes('.part'));
+  files.sort();
+  const out = fs.createWriteStream(outPath);
+  for(const f of files){
+    const data = fs.readFileSync(f);
+    out.write(data);
+  }
+  out.end();
+}
+
+function decryptFile(encPath, outZip, password){
+  const all = fs.readFileSync(encPath);
+  const salt = all.slice(0,16);
+  const iv = all.slice(16,28);
+  const authTag = all.slice(all.length - 16);
+  const ciphertext = all.slice(28, all.length - 16);
+  const key = deriveKey(password, salt);
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+  decipher.setAuthTag(authTag);
+  const plain = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  fs.writeFileSync(outZip, plain);
+}
+
+async function main(){
+  const args = process.argv.slice(2);
+  if(args.length < 2){
+    console.log('Usage: ENCRYPT_PASS="pw" node decrypt-reassemble.js <prefix.enc> <outFolder>');
+    process.exit(1);
+  }
+  const prefix = args[0];
+  const outFolder = args[1];
+  const pass = process.env.ENCRYPT_PASS || process.env.PASS || null;
+  if(!pass){ console.error('Set ENCRYPT_PASS env var'); process.exit(2); }
+  const reassembled = `${prefix}.reassembled`;
+  console.log('Reassembling parts matching', prefix);
+  reassemble(prefix, reassembled);
+  console.log('Decrypting to zip');
+  const outZip = `${prefix}.reassembled.zip`;
+  decryptFile(reassembled, outZip, pass);
+  console.log('Unzipping to', outFolder);
+  const { execSync } = require('child_process');
+  fs.mkdirSync(outFolder, { recursive: true });
+  execSync(`unzip -o ${outZip} -d ${outFolder}`);
+  fs.unlinkSync(reassembled);
+  fs.unlinkSync(outZip);
+  console.log('Done');
+}
+
+main();
+    </pre>
+
+    <h4>3) <code>GitHub Actions</code> workflow — ejecutar el decry

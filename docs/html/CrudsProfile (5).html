@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicación de Perfiles</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 sm:p-6">
+
+    <!-- Main profile container -->
+    <div class="bg-white rounded-xl shadow-2xl p-6 sm:p-8 w-full max-w-xl">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2">
+                Mi Perfil de Usuario
+            </h1>
+            <p class="text-gray-600">
+                Crea, lee, actualiza y elimina tu información.
+            </p>
+        </header>
+
+        <!-- Form for creating/updating a profile -->
+        <section class="mb-8">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Gestionar Perfil</h2>
+            <form id="profile-form" class="space-y-4">
+                <div>
+                    <label for="profile-name" class="block text-sm font-medium text-gray-700">Nombre</label>
+                    <input type="text" id="profile-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="profile-email" class="block text-sm font-medium text-gray-700">Correo Electrónico</label>
+                    <input type="email" id="profile-email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex space-x-4">
+                    <button type="button" onclick="saveProfile()" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-bold hover:bg-blue-700 transition-colors">
+                        Guardar Perfil (Create/Update)
+                    </button>
+                    <button type="button" onclick="deleteProfile()" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg font-bold hover:bg-red-700 transition-colors">
+                        Eliminar Perfil (Delete)
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Section for displaying the profile -->
+        <section>
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Tu Perfil</h2>
+            <div id="profile-display" class="bg-gray-100 p-6 rounded-lg shadow-inner">
+                <p id="display-name" class="text-lg font-semibold mb-2"></p>
+                <p id="display-email" class="text-gray-600"></p>
+                <p id="no-profile-message" class="text-gray-400 text-sm italic">
+                    No hay perfil guardado.
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Key for localStorage
+        const PROFILE_KEY = 'userProfile';
+
+        // Function to save or update the profile
+        function saveProfile() {
+            const nameInput = document.getElementById('profile-name');
+            const emailInput = document.getElementById('profile-email');
+
+            const profile = {
+                name: nameInput.value.trim(),
+                email: emailInput.value.trim()
+            };
+
+            // Check if profile has data
+            if (profile.name || profile.email) {
+                // Save the profile to localStorage (this is the 'CREATE' or 'UPDATE' part)
+                localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+                alert("Perfil guardado con éxito.");
+                loadProfile(); // Reload the displayed profile
+            } else {
+                alert("Por favor, introduce al menos un nombre o un correo electrónico.");
+            }
+        }
+
+        // Function to load and display the profile
+        function loadProfile() {
+            // Get profile from localStorage (this is the 'READ' part)
+            const profileData = localStorage.getItem(PROFILE_KEY);
+            const profile = profileData ? JSON.parse(profileData) : null;
+
+            const displayName = document.getElementById('display-name');
+            const displayEmail = document.getElementById('display-email');
+            const noProfileMessage = document.getElementById('no-profile-message');
+
+            if (profile && (profile.name || profile.email)) {
+                displayName.textContent = `Nombre: ${profile.name}`;
+                displayEmail.textContent = `Email: ${profile.email}`;
+                noProfileMessage.classList.add('hidden'); // Hide the message
+            } else {
+                displayName.textContent = '';
+                displayEmail.textContent = '';
+                noProfileMessage.classList.remove('hidden'); // Show the message
+            }
+        }
+
+        // Function to delete the profile
+        function deleteProfile() {
+            // Remove the profile from localStorage (this is the 'DELETE' part)
+            localStorage.removeItem(PROFILE_KEY);
+            alert("Perfil eliminado.");
+            loadProfile(); // Reload the displayed profile
+        }
+
+        // Initial load of the profile when the page is loaded
+        window.onload = loadProfile;
+    </script>
+</body>
+</html>

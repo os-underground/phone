@@ -1,0 +1,120 @@
+body{
+  padding: 25px;
+}
+.title {
+	color: #5C6AC4;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #181a1b;
+  color: #eee;
+}
+.ventana {
+  display: none;
+  position: absolute;
+  top: 100px;
+  left: 120px;
+  width: 370px;
+  min-height: 180px;
+  background: #23272e;
+  border: 2px solid #444;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px #0008;
+  z-index: 1000;
+}
+.ventana.grande {
+  width: 430px;
+  height: 420px;
+  top: 60px;
+  left: 60px;
+}
+.topbar {
+  background: #19202A;
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 10px 10px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: move;
+  user-select: none;
+}
+.cerrar {
+  background: none;
+  border: none;
+  color: #ff5353;
+  font-size: 1.2em;
+  cursor: pointer;
+}
+.contenido {
+  padding: 18px;
+  min-height: 120px;
+}
+.apps-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 18px;
+}
+.apps-lista button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #292e39;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 1.08em;
+  transition: background 0.2s;
+}
+.apps-lista button:hover {
+  background: #394050;
+}
+.apps-lista img {
+  width: 22px;
+  height: 22px;
+}
+input[type="text"] {
+  width: 70%;
+  padding: 6px;
+  border-radius: 5px;
+  border: none;
+  margin-right: 7px;
+  font-size: 1em;
+}
+iframe {
+  border: none;
+  width: 100%;
+  height: 200px;
+  margin-top: 10px;
+  background: #fff;
+}
+.barra-inferior {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #23272e;
+  display: flex;
+  gap: 10px;
+  padding: 12px 0 12px 20px;
+  z-index: 2000;
+  border-top: 2px solid #222;
+}
+.barra-inferior button {
+  background: #343844;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 22px;
+  cursor: pointer;
+  font-size: 1.08em;
+  transition: background 0.2s;
+}
+.barra-inferior button:hover {
+  background: #45506b;
+}

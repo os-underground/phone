@@ -1,0 +1,230 @@
+<!-- Descomentarlo cuando sea definitivo, fuera de codepen
+<!DOCTYPE html>
+-->
+<html>
+
+<head>
+  <title>Inventario v0.1</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+  <style>
+  html,
+body {
+  box-sizing: border-box;
+  font-size: 25px;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+body{
+  padding-top: 2em;
+}
+
+.contenedor {
+  border: 1px solid black;
+  font-size: 25px;
+  height: 90%;
+  margin: 0 auto;
+  padding: 0;
+  width: 90%;
+  min-width: 30em;
+}
+
+.controles {
+  background-color: lightblue;
+  height: 3em;
+  width: 100%;
+}
+
+.selector-categoria {
+  border: 1px solid rgba(0,0,0,.5);
+  border-radius: .5em;
+  cursor: pointer;
+  font-size: .8em;
+  height: 2em;
+  padding-left: .5em;
+  -webkit-appearance: none;
+  width: 80%;
+}
+
+.icono {
+  cursor: pointer;
+  height: 2em;
+  width: 2em;
+}
+
+table, tr{
+  width: 100%;
+}
+
+.celdaControles {
+  border: 1px solid black;
+  height: 2em;
+}
+
+.celdaTitulo{
+  text-align: center;
+  border-bottom: 1px solid rgba(0,0,0,.5);
+}
+
+.celdaLabelSelector{
+  padding-right: .5em;
+  text-align: right;
+  width: 50%;
+}
+
+.celdaBusqueda{
+  max-width: 3em;
+  width: 3em;
+}
+.celdaFiltroRef{
+  width: 5em;
+}
+.celdaFiltroRef input{
+  width: 5em;
+}
+.celdaFiltroDesc{
+  
+}
+.celdaCrear{
+  
+}
+
+.celdaResultados{
+  border: 1px solid black;
+  height: 2em;
+}
+.celdaIcono{
+  min-width: 3em;
+  text-align: right;
+  width: 3em;
+}
+.celdaRef{
+  min-width: 7em;
+  text-align: center;
+  width: 7em;
+}
+.celdaDesc{
+  max-width: 16em;
+  min-width: 16em;
+  overflow: hidden;
+  text-overflow: ellipsis;    
+  white-space: nowrap;  
+  width: 16em;
+  width: calc(100% - 14em);   
+}
+.celdaOpc{
+  min-width: 4em;
+  text-align: center;
+  padding-right: 1em;
+  width: 4em;
+}
+.celdaOpc .glyphicon-remove-sign{
+  color: red;
+  cursor: pointer;
+}
+.celdaOpc .glyphicon-info-sign{
+  color: blue;
+  cursor: pointer;
+}
+  </style>
+</head>
+
+<body>
+  <div class="contenedor" ng-app="InventarioApp" ng-controller="InventarioCtrl">
+
+    <table class="controles">
+      <tr>
+        <th colspan="4" class="celdaControles celdaTitulo">Sistema de gestión de inventarios</th>
+      </tr>
+      <tr>
+        <td colspan="2" class="celdaControles celdaLabelSelector">Visualizar categoría</td>
+        <td colspan="2" class="celdaControles">
+          <select class="selector-categoria" ng-model="categoria" ng-options="cat for cat in listaCategorias" ng-change="actualizaCategoria()">
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td class="celdaControles celdaBusqueda"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></td>
+        <td class="celdaControles celdaFiltroRef">
+          [<input ng-model="filterRef" placeholder="Referencia" />]
+        </td>
+        <td class="celdaControles celdaFiltroDesc">
+          <input ng-model="filterDesc" placeholder="Descripción" />
+        </td>
+        <td class="celdaControles celdaCrear"><span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span></td>
+      </tr>
+    </table>
+
+    <table class="resultados">
+      <tr ng-repeat="item in listaItems | filter:{ref:filterRef, desc:filterDesc}">
+        <td class="celdaResultados celdaIcono"><img class="icono" ng-src="{{item.img}}" /></td>
+        <td class="celdaResultados celdaRef">[{{item.ref}}]</td>
+        <td class="celdaResultados celdaDesc">{{item.desc}}</td>
+        <td class="celdaResultados celdaOpc">
+          <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+          <span class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span>
+        </td>
+      </tr>
+    </table>
+  </div>
+  
+  
+  <script>
+  (function() {
+  angular.module('InventarioApp', [])
+    .controller('InventarioCtrl', inventarioCtrlFn);
+
+  inventarioCtrlFn.$inject = ['$scope', '$log'];
+  
+  function inventarioCtrlFn ($scope, $log) {
+    $log.debug('Iniciando InventarioCtrl');
+    $scope.valorTest = 'UNO';
+    var foto1 = 'https://4.bp.blogspot.com/-uEaH48GhjOs/Vji7GepdR4I/AAAAAAAADPQ/SGQ_36W8CZw/s1600/propiedades%2Bboniato%2B%25282%2529.jpg';
+    var foto2 = 'http://blog.casapia.com/wp-content/uploads/2015/10/img_05031.jpg';
+    var foto3 = 'http://adelgazarmasrapido.com/wp-content/uploads/2014/08/Boniato-para-perder-peso.png';
+    
+    $scope.items = {};
+    $scope.items.categoriaA = [];
+    $scope.items.categoriaA.push({ref:'REF00001', desc:'Objeto 1, cosa verde rara', img:foto1});
+    $scope.items.categoriaA.push({ref:'REF00002', desc:'Objeto 2, cosa roja rara', img:foto1});
+    $scope.items.categoriaA.push({ref:'REF00003', desc:'Objeto 3, cosa verde rara Objeto 3, cosa verde rara Objeto 3, cosa verde rara Objeto 3, cosa verde rara', img:foto1});
+    $scope.items.categoriaA.push({ref:'REF00004', desc:'Objeto 4, cosa verde rara', img:foto1});
+    $scope.items.categoriaA.push({ref:'REF00005', desc:'Objeto 5, cosa verde rara', img:foto1});
+    $scope.items.categoriaA.push({ref:'REF00006', desc:'Objeto 6, cosa verde rara', img:foto1});
+        
+    $scope.items.categoriaB = [];
+    $scope.items.categoriaB.push({ref:'REF10001', desc:'Cosa 1, cosa rara', img:foto2});
+    $scope.items.categoriaB.push({ref:'REF10002', desc:'Cosa 2, cosa rara', img:foto2});
+    $scope.items.categoriaB.push({ref:'REF10003', desc:'Cosa 3, cosa rara', img:foto2});
+    $scope.items.categoriaB.push({ref:'REF10004', desc:'Cosa 4, cosa rara', img:foto2});
+    $scope.items.categoriaB.push({ref:'REF10005', desc:'Cosa 5, cosa rara', img:foto2});
+        
+    $scope.items.categoriaC = [];
+    $scope.items.categoriaC.push({ref:'REF20001', desc:'Esto es un 1', img:foto3});
+    $scope.items.categoriaC.push({ref:'REF20002', desc:'Esto es un 2', img:foto3});
+    $scope.items.categoriaC.push({ref:'REF20003', desc:'Esto es un 3', img:foto3});
+    $scope.items.categoriaC.push({ref:'REF20004', desc:'Esto es un 4', img:foto3});
+    $scope.items.categoriaC.push({ref:'REF20005', desc:'Esto es un 5', img:foto3});
+    
+    $scope.listaCategorias = Object.keys($scope.items);
+    $scope.categoria = $scope.listaCategorias[0];
+    $scope.actualizaCategoria = function (){
+      $scope.listaItems = $scope.items[$scope.categoria];
+    }
+    $scope.actualizaCategoria();    
+  }
+})();
+  </script>
+</body>
+
+</html>

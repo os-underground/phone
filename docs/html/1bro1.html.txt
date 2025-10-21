@@ -1,0 +1,319 @@
+
+
+
+
+Perfecto — gracias por la confianza. Te voy a dar todo junto: explicación clara de conceptos (repos, Marketplace, secrets, keys, tokens), buenas prácticas de privacidad, y scripts / comandos listos para que los copies y pegues (Bash + GPG + Git/Git LFS + GitHub Actions). Esto te ayudará a organizar tu repo, proteger los archivos grandes y privados, y automatizar tareas sin pagar servidores.
+
+Voy directo y en orden — si algo te interesa que convierta en archivo (HTML, script o workflow) lo pongo en el canvas que ya creé.
+
+
+---
+
+1) Conceptos clave (breve y claro)
+
+Repositorio (repo): carpeta con historial Git. Puede ser público o privado. En privado, solo la gente que invites puede verlo.
+
+Marketplace: plataforma (ej. GitHub Marketplace) donde publicas apps/actions; publicar suele requerir cumplir requisitos y decidir si será gratuito o de pago.
+
+Secretos (GitHub Secrets): pares nombre/valor que guardas en la configuración del repo (Settings → Secrets & variables → Actions). Los workflows pueden usarlos como secrets.MI_SECRETO. NO se deben poner en el código.
+
+Token / PAT (Personal Access Token): credencial generada por GitHub que permite autenticación por HTTPS y acceso a la API. Tiene permisos que tú eliges (repo, workflow, etc.). Trátalo como contraseña.
+
+SSH key: par de llaves pública/privada que permiten autenticar con Git sobre SSH (ej. git@github.com:usuario/repo.git). Más seguro para pushes desde tu máquina.
+
+Git LFS: extensión para manejar archivos grandes (imágenes, zips, binarios). Reemplaza los binarios por punteros y almacena objetos en LFS. Útil para >25 MB.
+
+Encriptación local: cifrar archivos antes de subirlos (recomendado si quieres máxima privacidad). Si encriptas, solo quien tenga la contraseña/clave podrá leerlos.
+
+Chunks / split: dividir archivos grandes en partes (ej. 25 MB) y recombinarlos después; útil si hay límites de subida.
+
+
+
+---
+
+2) Buenas prácticas de privacidad y flujo recomendado
+
+1. Repo privado si el contenido es sensible.
+
+
+2. Nunca subas contraseñas, claves privadas o tokens en código (usa .gitignore y Secrets).
+
+
+3. Para archivos grandes:
+
+Usa Git LFS si vas a versionarlos con Git.
+
+O encripta + sube los .enc (aunque sean grandes) o sube partes como artefactos.
+
+
+
+4. Si no quieres pagar servidores: haz todo local y encripta antes de subir. Usa Actions para automatizar si necesitas que GitHub haga transformaciones (desencriptar en CI con secrets).
+
+
+5. Rotar tokens y claves con frecuencia; usar 2FA en cuenta GitHub.
+
+
+6. Si publicas algo en Marketplace, revisa permisos que solicita tu app — mientras menos permisos, mejor.
+
+
+
+
+---
+
+3) Comandos y scripts útiles (listos para usar)
+
+A) Descomprimir, dividir en 25 MB y recomponer (Bash)
+
+# Descomprimir ZIP
+unzip archivo.zip -d carpeta_destino
+
+# Dividir archivo grande en partes de 25 MB
+split -b 25M "carpeta_destino/archivo_grande.bin" "archivo_grande.bin.part-"
+
+# Recombinar (Linux/macOS)
+cat archivo_grande.bin.part-* > archivo_grande_recompuesto.bin
+
+B) Encriptar / desencriptar archivos (recomendado: GPG simétrico)
+
+Usaremos GPG (fácil y seguro). Si no tienes gpg: sudo apt install gnupg (Linux) o instala GPG en Windows/Mac.
+
+# Encriptar (symmetric AES256). Te pedirá contraseña:
+gpg --symmetric --cipher-algo AES256 archivo
+
+# Resultado: archivo.gpg
+
+# Desencriptar:
+gpg --output archivo_decrypted --decrypt archivo.gpg
+
+Si prefieres openssl para cifrado simétrico (menos conveniente para contraseñas largas), ten cuidado con parámetros. GPG es más simple.
+
+C) Script Bash: encriptar todo un folder, luego dividir cada archivo en 25MB
+
+#!/usr/bin/env bash
+set -e
+ROOT_DIR="$1"   # e.g. ./carpeta_destino
+OUTDIR="${2:-encrypted_out}"
+CHUNK_SIZE=25M
+
+mkdir -p "$OUTDIR"
+
+find "$ROOT_DIR" -type f | while read -r file; do
+  base=$(basename "$file")
+  enc="${OUTDIR}/${base}.gpg"
+  echo "Encriptando $file -> $enc"
+  gpg --batch --yes --symmetric --cipher-algo AES256 --passphrase "$ENCRYPT_PASS" -o "$enc" "$file"
+  echo "Dividiendo $enc en partes de $CHUNK_SIZE..."
+  split -b $CHUNK_SIZE "$enc" "${enc}.part-"
+  # borrar .gpg si quieres sólo las partes
+  rm -f "$enc"
+done
+
+> Nota: este script espera que exportes ENCRYPT_PASS (variable de entorno). No la pongas en el repo; en CI la pones como secret.
+
+
+
+D) Git LFS (instalación y uso básico)
+
+# instalar
+git lfs install
+
+# indicar qué archivos manejar con LFS (ej. .zip)
+git lfs track "*.zip"
+git add .gitattributes
+git add path/to/bigfile.zip
+git commit -m "Add big file via LFS"
+git push origin main
+
+GitHub tiene límites gratuitos de LFS por almacenamiento/transferencia; revisa si necesitas plan.
+
+
+---
+
+4) GitHub Actions — ejemplo: descomprimir y desencriptar en CI (usa Secrets)
+
+Workflow que al hacer push de archivo.zip.gpg.part-* toma las partes, las junta, desencripta (con secret ENCRYPT_PASS) y sube artifact.
+
+# .github/workflows/reassemble-and-decrypt.yml
+name: Reassemble and Decrypt
+on:
+  push:
+    paths:
+      - ''encrypted/ **' '   # donde subes las partes
+
+jobs:
+  reassemble:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Reassemble parts
+        run: |
+          mkdir -p tmp
+          cat encrypted/*.part-* > tmp/all.gpg
+
+      - name: Decrypt (GPG symmetric)
+        env:
+          ENCRYPT_PASS: ${{ secrets.ENCRYPT_PASS }}
+        run: |
+          echo "$ENCRYPT_PASS" > pass.txt
+          gpg --batch --yes --passphrase-file pass.txt --output tmp/decrypted.zip --decrypt tmp/all.gpg
+
+      - name: Unzip
+        run: |
+          unzip tmp/decrypted.zip -d tmp/unzipped
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: unzipped-content
+          path: tmp/unzipped/
+
+Importante: agrega ENCRYPT_PASS en los Secrets del repo (Settings → Secrets & variables → Actions → New repository secret).
+
+
+---
+
+5) Tokens, SSH y permisos — diferencias y cuándo usarlos
+
+SSH key: usa para pushes desde tu PC (configurar ssh-keygen, subir id_rsa.pub en GitHub → Settings → SSH and GPG keys). Es simple y seguro.
+
+PAT (Personal Access Token): necesario para scripts que usan HTTPS o llaman la API (ej. desde CI o programas). Tiene scopes (permisos) limitables. Trátalo como secreto.
+
+GitHub App / OAuth App: para integraciones más complejas (Marketplace, instalación por otros usuarios). Requiere más configuración (webhooks, permisos).
+
+GitHub Secrets: coloca PATs, claves y passwords aquí; Actions los leen como secrets.MI_TOKEN.
+
+
+Seguridad:
+
+No compartas claves por chat.
+
+Usa permisos mínimos para tokens.
+
+En CI, evita exponer secrets a workflows que corran desde forks (riesgo de leak en PRs).
+
+
+
+---
+
+6) Publicar en Marketplace (resumen práctico)
+
+Si te refieres a GitHub Marketplace (ej. publicar un Action o una App):
+
+Decide tipo: GitHub Action, GitHub App o Integration.
+
+Documenta bien tu acción (README, usage, inputs/outputs).
+
+Revisa requisitos de publicación (licencia, descripción, logo).
+
+Para Apps que manejan repos privados de otros usuarios, hay proceso de revisión y permisos.
+
+Si no quieres publicar todavía, mantén tu proyecto privado hasta estar lista.
+
+
+> Si te referías a otro "marketplace" (otro hosting o tienda), dime cuál y adapto los pasos.
+
+
+
+
+---
+
+7) Checklist práctico para tu caso (paso a paso)
+
+1. Haz backup local de todo lo que no quieras perder.
+
+
+2. Decide: ¿uso Git LFS o encripto + subo partes?
+
+Si quieres control total: encriptar + subir partes (no dependes de LFS ni pagos).
+
+Si quieres versionado y compartir dentro de GitHub: Git LFS (verifica cuotas).
+
+
+
+3. Crea repo privado en GitHub.
+
+
+4. Añade .gitignore y no subas archivos sensibles sin encriptar.
+
+
+5. Si automatizas (CI), guarda la contraseña de encriptación en Secrets (ENCRYPT_PASS) y cualquier PAT en repo secrets.
+
+
+6. Sube las partes (archivo.part-*) o usa LFS.
+
+
+7. Prueba workflow localmente y en Actions (usa artifacts para ver el resultado).
+
+
+8. Cuando publiques en Marketplace: prepara README, licencias y revisa permisos.
+
+
+
+
+---
+
+8) Ejemplo completo — flujo "seguro" para subir archivos grandes sin pagar
+
+1. Localmente:
+
+gpg --symmetric --cipher-algo AES256 mi_folder.zip → mi_folder.zip.gpg
+
+split -b 25M mi_folder.zip.gpg mi_folder.zip.gpg.part-
+
+git add encrypted/ (contiene mi_folder.zip.gpg.part-*), commit y push a repo privado
+
+
+
+2. En GitHub Actions:
+
+Workflow detecta cambios en encrypted/, reensambla las partes, desencripta usando secret ENCRYPT_PASS, y sube artifact con el contenido (o lo procesa).
+
+
+
+3. Si necesitas compartir con alguien: dales el link al repo (si es privado, invítales) y la contraseña ENCRYPT_PASS por un canal seguro.
+
+
+
+
+---
+
+9) Código extra opcional (Node.js) — encriptar y dividir (si lo prefieres)
+
+Puedo adjuntar un encrypt-split.js que:
+
+toma carpeta → zip (usando archiver) → encripta (crypto, AES-GCM) → divide en 25MB → guarda partes.
+Dime si lo quieres y lo creo en el canvas.
+
+
+
+---
+
+10) Riesgos y recomendaciones finales
+
+Subir archivos sensibles sin cifrado: riesgo de exposición.
+
+Secrets en logs: evita echo $SECRET en CI.
+
+Acceso innecesario: otorga mínimo scope a tokens.
+
+Backups: guarda claves en gestor de contraseñas seguro.
+
+
+
+---
+
+Si quieres, ahora hago cualquiera de estas cosas inmediatamente (elije una o varias, no pregunto más ya que dijiste que quieres todo):
+
+A) Crear el script Node.js que zipe, encripte y divida automáticamente.
+
+B) Poner el workflow de GitHub Actions completo en el canvas listo para pegar.
+
+C) Generar un README paso a paso con todo lo anterior, listo para subir a tu repo.
+
+D) Crear el script Bash final y probado (lo pongo en el canvas).
+
+
+Dime cuál (A/B/C/D) quieres que cree ahora y lo preparo completo en el canvas. Si prefieres que haga los cuatro, también los genero; solo dime “hazlos todos” y los creo ya.
+

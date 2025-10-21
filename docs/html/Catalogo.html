@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Etiquetas que influyen en el SEO -->
+    <meta name="author" content="AlejandroCortés">
+    <meta name="description" content="Recopilatorio de etiquetas HTML">
+    <meta name="keyword" content="HTML, imágenes, desarollo web, diseño web, catalogo de etiqeutas,">
+    <title>Catálogo HTML</title>
+    <link rel="shortcut icon" href="img/www_favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+
+<style>
+
+
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+
+
+img {
+    width: 100%;
+}
+
+div {
+    color: red;
+}
+
+* {
+    font-family: "lato", "arial", "sans-serif";
+} 
+
+h1, h2, h3 {
+    text-align: center;
+    font-family: "Anton", "verdena", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+footer {
+    background-color: gray;
+    text-align: center;
+    color: white;
+}
+
+#irAbajo {
+    
+    text-align: right;
+    
+}
+
+
+#copyright {
+    font-size: 24px;
+}
+
+span {
+    color: red;
+}
+
+</style>
+</head>
+
+<body>
+     <!-- Como poner imagen de cabecera adaptada a tamaños de pantalla -->
+    <header>
+        <picture id="subir1">
+            <source srcset="img/header_500.avif" media="(max-width: 500px)">
+            <source srcset="img/header_1100.avif" media="(max-width: 1100px)">
+            <img src="img/header_1920.avif" alt="Ordenador para programar">        
+        </picture>
+        <h1>Etiquetas HTML</h1>
+        <nav>
+            <ul>
+                <li><a href="Catalogo.html">Inicio</a></li>
+                <li><a href="Imagenes.html">Imagenes</a></li>
+                <li><a href="listas.html">Listas</a></li>
+                <li><a href="multimedia.html">Multimedia</a></li>
+                <li><a href="sementica.html">Semántica</a></li>
+    
+            </ul>
+        </nav>
+        <p id="irAbajo"><a href="#footer1">Ir abajo</a></p>
+    </header>
+    <main>
+        <section>
+            <h2>Introduccion a HTML</h2>
+            <p>La sintaxis basica de HTML es:</p>
+            <pre>        
+                &lt;nombre_etiqueta&gt;Contenido&lt;/nombre_etiqueta&gt;
+                &lt;nombre_etiqueta nombre_atributo="valor"&gt;Contenido&lt;/nombre_etiqueta&gt;
+                &lt;nombre_etiqueta atributo_booleano&gt;Contenido&lt;/nombre_etiqueta&gt; 
+            </pre>
+        </section>
+
+    </main>
+    <footer>
+        <p id="copyright">&copy;AlejandroCortés</p>
+        <p>Curso <span>2024</span></p>
+    </footer>
+
+    <div>
+        <h1>Prueba de texto</h1>
+    </div>
+    <!-- 1. Etiquetas de texto -->
+    <!-- 1.1 - Títulos  -->
+
+        
+        <!-- Estas son las etiquetas para poner un título -->
+        <!-- Atencion:  No existe H7 -->
+        <h1>Soy un título h1</h1>
+        <h2>Soy un h2</h2>
+        <h3>Soy un h3</h3>
+        <h4>Soy un h4</h4>
+        <h5>Soy un h5</h5>
+        <h6>Soy un h6</h6>
+
+    <!-- 1.2 Etiquetas de texto y semanticas -->
+    <!-- Etiquetas semanticas son aquéllas que tienen relevancia para los robots -->
+        <p>Soy un párrafo</p>
+        <!-- etiqueta semantica para resaltar en negrita texto IMPORTANTE para el SEO -->
+        <p>Me gusta tomar un <strong>café con leche</strong> por la mañana</p>
+        <!-- etiqueta semantica que NO ES IMPORTANTE para el SEO -->
+        <p>Me gusta tomar un café con leche <small>por la mañana</small></p>
+        <!-- Etiqueta para elevar a la potencia (super índice) -->
+        <p>La formula de la teoria de la relatividad es : e = mc<sup>2</sup></p>
+        <!-- Etiqueta para bajar a la potencia (sub índice) -->
+        <p>La fórmula del agua es: H<sub>2</sub>O</p>
+        <!-- Etiqueta para citar textualmente -->
+        <p>Una frase famosa de <cite>Galileo</cite> fue:</p>
+        <blockquote>"...Sin embargo se mueve"</blockquote>
+        <!-- Ejemplo de cita corta -->
+        <p>Ejemplo de cita corta:<cite>Sócrates</cite> dijo <q>Conócete a ti mismo</q></p>
+
+    <!-- 2 Listas -->
+    <!-- 2.1 Listas desordenadas -->
+        <h2>Lista de la compra</h2>
+        <ul>
+            <li>Leche</li>
+            <li>Pan</li>
+            <li>Huevos</li>
+            <li>Harina</li>
+            <li>Aceite</li>
+            <li>Carne</li>
+        </ul>
+    <!-- 2.2 Listas ordenadas -->
+            <h2>Paises más contaminadores del mundo</h2>
+        <ol type="1" reversed >
+            <li>China</li>
+            <li>India</li>
+            <li>Estados Unidos</li>
+        </ol>
+
+
+    <!-- 2.3 listas descriptivas -->
+        <dl>
+            <dt>HTML</dt>
+            <dd>Es el lenguaje de las páginas</dd>
+            <dt>CSS</dt>
+            <dd>Sirve para dar estilos a las páginas</dd>
+            <dd>Sirve para dar estilos a las páginas</dd>
+
+        </dl>
+
+
+
+    <!-- 3. Tablas -->
+    <h2>Ejemplos de facturas</h2>
+    <table>
+        <thead>
+            <tr> <!--table row = tabla fila -->
+                <th>Concepto</th>
+                <th>Unidades</th>
+                <th>Precio</th>
+                <th>Total</th>
+            </tr>        
+        </thead>
+        <TBody>
+            <tr>
+                <td>televisor Sony 85 pulgadas 8k</td> <!--td = table date -->
+                <td>1</td>
+                <td>6000 €</td>
+                <td>6000 €</td>
+            </tr>
+            <tr>
+                <td>Frigorífico Balay</td>
+                <td>2</td>
+                <td>1500 €</td>
+                <td>3000 €</td>
+            </tr>
+        </TBody>
+        <tfoot>
+            <tr>
+                <td colspan="3">Total</td> <!--colspan sirve para unificar celdas-->
+                <td>9000 €</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- 4. Imágenes -->
+        <!-- Alt es una etiqueta semantica (muy relevante en SEO) -->
+        <img src="img/Café.jpg" alt="Texto alternativo a la imagen jpg" width="400px">
+        <!-- Esta imagen esta contenida en "figure" para poder añadir un pie de foto "figcaption" -->
+        <figure>
+            <img src="img/Café.webp" alt="Texto alternativo a la imagen webp" width="400px" title="Café buenísimo">
+            <figcaption><small>Café delicioso por la mañana (fulanito)</small></figcaption>
+        </figure>
+        <!-- <img src="img/5376.jpg" alt="" sizes="(max-width: 430px) 100vw, (max-width: 800px) 100vw, (max-width: 1200px) vw100" srcset="img/3024 3024w img/4480.jpg 4480w img/5376.jpg 5376w"> -->
+    
+        <picture>
+            <source srcset="img/4032.jpg" width="650px" media="(min-width: 650px)">
+            <source srcset="img/4480.jpg" width="1200px" media="(min-width: 1200px)">
+            <source srcset="img/5376.jpg" width="1920px" media="(min-width: 1920px)">
+
+            <img src="img/5376.jpg" alt="Img Café granos y galleta">
+        </picture>
+
+    <!-- 5. Links -->
+        <a href="https://undraw.co/" target="_blank" ><img src="img/coffee-gif.gif" alt="Gif" width="400px" title="Ir a undraw.co"></a>
+        <br>
+        <a href="https://www.google.es" target="_blank">Ir a Google</a> <br>
+        <a id="footer1" href="#subir1">Volver arriba</a> <br>
+        <br>
+
+
+    <!-- 6.Etiquetas para maquetar -->
+
+         <div>Hola mundo</div> <!--etiqueta de bloque -->
+         <span>Hola mundo</span> <!--etiqueta de linea -->
+         <span>Hola mundo</span>
+
+         <header></header> <!-- solo un header en el body, suele contener el nav y el h1 -->
+         <nav></nav> <!--Menu de navegacion -->
+         <main> <!--Para lo principal de la pagina-->
+              <aside></aside> <!--Publicidad (no tiene quen ver con el contenido principal!sty) -->
+             <section>
+                <article></article> <!--Para los articulos-->
+             </section> <!--Para definir secciones -->
+         </main> 
+         <footer></footer> <!--Redes sociales, contacto, avisos legales-->
+
+        <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+        <!-- Desplegable html -->
+         <details open>
+            <summary>¿Que día es hoy?</summary>
+            <p>Hoy es jueves 15 de febrero</p>
+            <details open>
+                <summary>¿Que día es hoy?</summary>
+                <p>Hoy es jueves 15 de febrero</p>
+             </details>
+         </details>
+         <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+         <!-- Ejemplo de ventana modal -->
+
+         <dialog id="modal">
+            <h2>Esto es un ejemplo de ventana modal</h2>
+            <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Temporibus neque dignissimos, accusamus mollitia distinctio aut perspiciatis cum itaque nisi repudiandae.</p>
+            <button id="cerrar">Cerrar ventana</button>
+        </dialog>
+        <button id="abrir">Abrir</button>
+        <script>
+            window.abrir.addEventListener("click", () => {window.modal.showModal()})
+            window.cerrar.addEventListener("click", () => {window.modal.close()})
+        </script>
+
+        <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+         <!-- Audios -->
+     <audio src="assets/aplaudiments.mp3" controls></audio> <br>  <!-- attibutos: autoplay  ------- Es mejor poner en el html y controls para el usuario pueda reproducirlo -->
+
+     <!-- source:  En HTML, la etiqueta <source> se utiliza dentro de la etiqueta <video> o <audio> para especificar múltiples fuentes de medios para que el navegador pueda elegir la mejor opción según el tipo de archivo y el formato que sea compatible. Esto es útil para garantizar la reproducción del contenido multimedia en diferentes navegadores y dispositivos. Cada <source> debe tener un atributo src que apunte al archivo multimedia y un atributo type que indique el tipo de archivo, por ejemplo, video/mp4 para videos en formato MP4. -->
+    <video src="assets/tiempo.mp4" autoplay loop></video> <br> <!-- AUTOPLAY : se reproduce automaticamentae  ,   lOOP : para reproducir infinitamente  MUTE: para silenciar -->
+
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/f4KsEUiw3gA?si=WLd-VH8eBF4-JA3h" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe> <br> <!-- Para poner otra página dentro de la página web principal (pero necesita permisos), ventajas poner videos en youtube (este nos da el código) -->
+     
+    <!-- para map -->     
+    
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2992.2975662668678!2d2.1544708768115073!3d41.41105879452534!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x12a4a2b07f2b5ed1%3A0x16da32fc86bdf59a!2sTrav.%20de%20Dalt%2C%2093%2C%20Gr%C3%A0cia%2C%2008024%20Barcelona!5e0!3m2!1sen!2ses!4v1708069755577!5m2!1sen!2ses" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+</body>
+</html>

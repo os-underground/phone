@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <title>home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--<link rel="stylesheet" href="styles1.css">-->
+  <style>
+    body {
+      background: linear-gradient(135deg, #FFFFFF 0%, #9304FF3B 100%);
+      height: 1920px;
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      max-width:1280px;
+    }
+
+    .navbar {
+      margin: 0;
+      top: 0;
+      font-size: 1.5em;
+    }
+
+    .navbar,
+    .footer {
+      background: linear-gradient(90deg, #97FFDE 0%, #BBDBFFDE 100%);
+      color: #000000;
+      box-shadow: 0 2px 8px rgba(106, 223, 153, 0.18);
+      border-radius: 0 0 14px 14px;
+     padding: 12px 24px;      display: flex;    
+     align-items: center;
+    justify-content: space-between;
+      max-height: 50px;
+      position: fixed;
+      max-width: 1280px;
+      left: 0;
+      right: 0;
+      z-index: 10;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      font-size: 0.95em;
+    }
+
+    .container {
+      padding: 80px 16px 60px 16px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .menu-btn,
+    .logout-btn,
+    .open-sidebar-btn {
+      background: linear-gradient(90deg, #873AEA 0%, #7AFCFF 100%);
+      color: #232323;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(245, 72, 72, 1);
+      padding: 10px 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 4px 4px;
+      font-size: .5em;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+
+    .menu-btn:hover,
+    .logout-btn:hover,
+    .open-sidebar-btn:hover {
+      background: linear-gradient(90deg, #FFD2007D 0%, #F7971E 100%);
+      box-shadow: 4px 4px 12px rgba(60, 60, 60, 0.22);
+    }
+
+    .menu-btn.active {
+      background: #4EBC76A6;
+    }
+
+    .card {
+      background: linear-gradient(120deg, #29DB7C99 0%, #06A5B8B3 100%);
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(75, 6, 79, 0.45), 0 1.5px 6px rgba(215, 100, 197, 0.77);
+      border: none;
+      margin: 16px 0;
+      padding: 20px 14px;
+      display: flex;
+      max-width:80%;
+      width:220px;
+      flex-direction: column;
+      
+      gap: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      height: 300;
+      max-height:300%;
+    }
+
+    .card:hover {
+      transform: scale(1.04) translateY(-2px);
+      box-shadow: 0 16px 40px rgba(30, 41, 59, 0.32), 0 3px 12px rgba(0, 0, 0, 0.18);
+    }
+
+    .card h3 {
+      margin: 0 0 8px 0;
+      color: #5C6AC4;
+    }
+
+    .card a {
+      color: #3b82f6;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+    .searchContent {
+      background: linear-gradient(#7AFCFF, #AF19FF);
+      padding: 4px 5px 7px;
+      
+    }
+    .searchInput {
+      margin:1px 1px 1px;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 220px;
+      height: 100vh;
+      background: linear-gradient(135deg, #AE6DCF57 0%, #2A61B936 100%);
+      box-shadow: 2px 0 14px rgba(102, 174, 183, 0.43);
+      border-radius: 0 18px 18px 0;
+      padding: 24px 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transform: translateX(-100%);
+      transition: transform 0.5s;
+    }
+
+    .sidebar.active {
+      transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.2);
+      z-index: 19;
+      display: none;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+
+    .open-sidebar-btn {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 30;
+      width:70px;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.6em;
+      cursor: pointer;
+      align-self: flex-end;
+      margin-right: 14px;
+    }
+
+    .layout {
+      display: flex;
+      height: 100vh;
+      max-width: 1920px;
+      max-height:1920px;
+    }
+
+    .sidebar-left {
+      width: flex;
+      background: #EA97B930;
+      margin:10px;
+    }
+
+    .main-content {#FFEAFC
+      flex: 1;
+      background: #DBDBDB;
+      padding: 16px;
+     width: 100%;
+     margin:10px;
+     position: center;
+    }
+
+    .sidebar-right {
+      width: flex;
+      background: #CD2CB400;
+      padding: 16px;
+      margin: 10px 5px 10px 10px;
+      right:10px;
+    }
+
+    @media (max-width: 600px)
+    {
+      .container {
+        max-width: 98vw;
+        padding: 80px 10vw 60px 2vw;
+      }
+
+      .sidebar-left,
+      .sidebar-right {
+        display: none;
+      }
+
+      .main-content {
+        width: 100%;
+        padding: 8px 4px 5px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <button class="open-sidebar-btn" onclick="openSidebar()" style="width:80px; height: 50px;">☰</button>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <nav class="sidebar" id="sidebar">
+    <button class="close-btn" onclick="closeSidebar()" style="top:100px">×</button>
+    <a href="index.html">index</a>
+    <a href="index2.html">index2</a>
+    <a href="index3.html">index3</a>
+    <a href="config.html">⚙️ Configuración</a>
+    
+      <div>
+      <button class="menu-btn" id="todosBtn">Todos</button>
+      <button class="menu-btn" id="motosBtn">Motos</button>
+      <button class="menu-btn" id="autosBtn">Autos</button>
+      <button class="login-btn" id="loginMenuBtn">Login</button>
+      <button class="logout-btn hidden" id="logoutMenuBtn">Salir</button>
+    </div>  
+    
+  </nav>
+  <div class="navbar">
+    <span style="font-weight:bold;">Prof</span>
+<span>
+      <input type="text" id="searchInput" placeholder="Buscar...">
+      <button onclick="searchContent()">Buscar</button>
+    </span>
+    <ul> <span>
+ <button class="menu-btn" onclick="window.location='index.html'">Todos</button>
+   <!--   <button class="menu-btn" onclick="window.location='Projects.html'">Proyectos</button>
+      
+      <button class="menu-btn" onclick="window.location='alumn.html'">Alumnos</button>
+      <button class="menu-btn" onclick="window.location='config.html'">⚙️ Configuración</button>
+      -->
+    </span>
+  
+  </div>
+  <span>
+  <header style="background: linear-gradient(sky 0% , blue 100%);backdrop-filter:;top:100px;margin:10px">
+    <h4>WEB by OS </h4>
+    <p>os</p>
+  </header>
+</span>
+  <div class="layout">
+<span>
+  <aside class="sidebar-left" style="width:200px; escale:0.7;">
+    <div class="card">
+        <ul>
+        <li><a href="all.html">Home</a></li>
+        <li><a href="#">topic</a></li>
+        <li><a href="#">1:  s </a></li>
+        <li><a href="#"> 2:   )</a></li>
+        <li><a href="#">S 3: a</a></li>
+        <li><a href="#">4:  ( )</a></li>
+        <li><a href="#"> 5:  ()</a></li>
+      </ul>
+
+      
+      </div>
+      <div class="card">
+        <h2>valid Licencia!</h2>
+        <iframe src="ValLicen.html" style="height:570px; width:100;scale:0."></iframe>
+        
+</div>
+</aside>
+</span>
+  <span>
+<main class="main-content">
+   <iframe src="card.html" frameborder="0px" style="height:1760px; width:600px;scale:0.9"></iframe>
+  </main>
+</span>
+    
+<span>
+  <aside class="sidebar-right" style="width:300px; margin:10px;">
+<!--
+  </div>
+--
+
+/*
+  */ 
+  
+
+    -->
+    
+  <div class="card">
+    <iframe src="CrudsProfile.html"style ="height:400px"></iframe>
+  </div>
+     <div class="card">
+        <h3>Youtube CIENCE</h3>
+        <iframe src="https://www.youtube.com/embed/h8frMQwwmQ8" width="80%" height="70%" frameborder="0"
+          allowfullscreen></iframe>
+      </div>
+      <div class="card">
+        <h3>Video de proyecto de clase</h3>
+        <iframe width="80%" height="550px" src="https://www.youtube.com/embed/3JluqTojuME?si=U1jHkX4mYHk9b7mM"
+          title="YouTube video player" frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        <p>¡Felicitaciones por tu trabajo!</p>
+      </div>
+
+    
+    </aside>
+  </span>
+    
+    <!--FIN DE LAYOUT-->
+    </div>
+    </div>
+    
+    
+  <div class="footer">-
+      <span id="currentTime" style="color:black;"></span>
+    <span>
+    <div>
+      © 2025 Os clef.
+    </div>
+    </span>
+    <div>
+      <a href="#" style="color:#fff;">Contacto</a>
+    </div>
+  </div>
+  
+  
+    <script>
+    document.getElementById('loginForm').onsubmit = function (e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      localStorage.setItem('userId', username);
+      document.getElementById('loginStatus').textContent = 'Sesión iniciada como: ' + username;
+    }
+  </script>
+
+  <script>
+    // Actualiza la hora
+    function showTime() {
+      document.getElementById('currentTime').textContent = new Date().toLocaleTimeString();
+    }
+    setInterval(showTime, 1000); showTime();
+
+    // Sidebar
+    function openSidebar() {
+      document.getElementById('sidebar').classList.add('active');
+      document.getElementById('sidebarOverlay').classList.add('active');
+    }
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('active');
+      document.getElementById('sidebarOverlay').classList.remove('active');
+    }
+
+    // Buscador básico
+    function searchContent() {
+      var input = document.getElementById('searchInput').value.toLowerCase();
+      var cards = document.querySelectorAll('.card');
+      cards.forEach(function (card) {
+        card.style.display = card.textContent.toLowerCase().includes(input) ? '' : 'none';
+      });
+    }
+  </script>
+
+  --
+    <style>
+  <script>
+    let usuarioAutenticado = false;
+    let tipoActual = "todos";
+    let items = [
+      {id:1, nombre:"Toyota Corolla", tipo:"auto", precio:"$50,000", imagen:"https://images.unsplash.com/photo-1511918984145-48de785d4c4e?fit=crop&w=400&q=80"},
+      {id:2, nombre:"Honda Civic", tipo:"auto", precio:"$42,500", imagen:"https://images.unsplash.com/photo-1461632830798-3adb3034e4c8?fit=crop&w=400&q=80"},
+      {id:3, nombre:"Volkswagen Golf", tipo:"auto", precio:"$93,200", imagen:"https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?fit=crop&w=400&q=80"},
+      {id:4, nombre:"BMW Serie 3", tipo:"auto", precio:"$72,950", imagen:"https://images.unsplash.com/photo-1511918984145-48de785d4c4e?fit=crop&w=400&q=80"},
+      {id:5, nombre:"Kawasaki Ninja", tipo:"moto", precio:"$50,000", imagen:"https://images.unsplash.com/photo-1519864600264-2b6f1babe3a8?fit=crop&w=400&q=80"},
+      {id:6, nombre:"Harley Davidson", tipo:"moto", precio:"$100,500", imagen:"https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?fit=crop&w=400&q=80"},
+      {id:7, nombre:"Yamaha FZ", tipo:"moto", precio:"$93,200", imagen:"https://images.unsplash.com/photo-1461632830798-3adb3034e4c8?fit=crop&w=400&q=80"},
+      {id:8, nombre:"Suzuki GN", tipo:"moto", precio:"$72,950", imagen:"https://images.unsplash.com/photo-1519864600264-2b6f1babe3a8?fit=crop&w=400&q=80"}
+    ];
+    let nextId = items.length + 1;
+    let editId = null;
+
+    function mostrarLanding() {
+      document.getElementById('mainContent').classList.remove('hidden');
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('crudPage').classList.add('hidden');
+      document.getElementById('loginMenuBtn').classList.remove('hidden');
+      document.getElementById('logoutMenuBtn').classList.add('hidden');
+      cargarItems();
+    }
+    function mostrarLogin() {
+      document.getElementById('mainContent').classList.add('hidden');
+      document.getElementById('crudPage').classList.add('hidden');
+      document.getElementById('loginPage').classList.remove('hidden');
+      document.getElementById('loginMenuBtn').classList.add('hidden');
+      document.getElementById('logoutMenuBtn').classList.add('hidden');
+    }
+    function mostrarCrud() {
+#z      document.getElementById('mainContent').classList.add('hidden');
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('crudPage').classList.remove('hidden');
+      document.getElementById('loginMenuBtn').classList.add('hidden');
+      document.getElementById('logoutMenuBtn').classList.remove('hidden');
+      cargarItems();
+    }
+    document.getElementById('loginMenuBtn').onclick = mostrarLogin;
+    document.getElementById('logoutMenuBtn').onclick = () => {
+      usuarioAutenticado = false;
+      mostrarLanding();
+    };
+    function setTipo(tipo) {
+      tipoActual = tipo;
+      document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+      if (tipo === "todos") document.getElementById('todosBtn').classList.add('active');
+      if (tipo === "motos") document.getElementById('motosBtn').classList.add('active');
+      if (tipo === "autos") document.getElementById('autosBtn').classList.add('active');
+      cargarItems();
+    }
+    document.getElementById('todosBtn').onclick = () => setTipo('todos');
+    document.getElementById('motosBtn').onclick = () => setTipo('motos');
+    document.getElementById('autosBtn').onclick = () => setTipo('autos');
+
+    document.getElementById('loginForm').onsubmit = function(e){
+      e.preventDefault();
+      usuarioAutenticado = true;
+      document.getElementById('loginError').innerText = "";
+      mostrarCrud();
+    };
+
+    function cargarItems(){
+      if (!usuarioAutenticado){
+        let html = "";
+        const filtrados = tipoActual === "todos" ? items : items.filter(i=>i.tipo===tipoActual);
+        filtrados.forEach(item => {
+          html += `<div class="card">
+            <img src="${item.imagen || 'https://via.placeholder.com/400x200'}" alt="${item.nombre}">
+            <strong>${item.nombre}</strong>
+            <span>Tipo: ${item.tipo}</span>
+            <span>Precio: ${item.precio}</span>
+          </div>`;
+        });
+        document.getElementById('mainContent').innerHTML = `<h2>Vehículos disponibles: ${tipoActual.charAt(0).toUpperCase()+tipoActual.slice(1)}</h2>${html}`;
+      } else {
+        let html = "";
+        items.forEach(item => {
+          html += `<div class="card">
+            <img src="${item.imagen || 'https://via.placeholder.com/400x200'}" alt="${item.nombre}">
+            <strong>${item.nombre}</strong>
+            <span>Tipo: ${item.tipo}</span>
+            <span>Precio: ${item.precio}</span>
+            <button class="crud-btn" onclick="editarItem(${item.id})">Editar</button>
+            <button class="crud-btn" style="background:#dc2626;" onclick="eliminarItem(${item.id})">Eliminar</button>
+          </div>`;
+        });
+        document.getElementById('crudList').innerHTML = html;
+      }
+    }
+    document.getElementById('addItemBtn').onclick = () => {
+      editId = null;
+      document.getElementById('addForm').classList.remove('hidden');
+      document.getElementById('itemNombre').value = "";
+      document.getElementById('itemTipo').value = "";
+      document.getElementById('itemPrecio').value = "";
+      document.getElementById('itemImagen').value = "";
+    };
+    document.getElementById('cancelItemBtn').onclick = () => {
+      document.getElementById('addForm').classList.add('hidden');
+    };
+    document.getElementById('saveItemBtn').onclick = () => {
+      const nombre = document.getElementById('itemNombre').value;
+      const tipo = document.getElementById('itemTipo').value;
+      const precio = document.getElementById('itemPrecio').value;
+      const imagen = document.getElementById('itemImagen').value;
+      
+      if (!nombre || !tipo || !precio) return alert("Completa todos los campos");
+      if (editId){
+        const idx = items.findIndex(i=>i.id===editId);
+        if (idx>-1){
+          items[idx] = {id:editId, nombre, tipo, precio, imagen};
+        }
+      } 
+      else {
+        items.push({id:nextId++, nombre, tipo, precio, imagen});
+      }
+      cargarItems();
+      document.getElementById('addForm').classList.add('hidden');
+    };
+    window.editarItem = function(id){
+      const item = items.find(i=>i.id===id);
+      if (!item) return;
+      editId = id;
+      document.getElementById('addForm').classList.remove('hidden');
+      document.getElementById('itemNombre').value = item.nombre;
+      document.getElementById('itemTipo').value = item.tipo;
+      document.getElementById('itemPrecio').value = item.precio;
+      document.getElementById('itemImagen').value = item.imagen || "";
+    }
+    window.eliminarItem = function(id){
+      if (!confirm("¿Seguro que deseas eliminar este vehículo?")) return;
+      items = items.filter(i=>i.id!==id);
+      cargarItems();
+    }
+    mostrarLanding(qq\);
+  </script>
+  
+</body>
+
+</html>

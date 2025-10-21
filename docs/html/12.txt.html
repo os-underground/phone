@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+				<meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
+				<title>Hello, World!</title>
+</head>
+<body>
+				<h1>
+								Hello, World!
+				</h1>
+</body>
+</html>
+¡Perfecto, lo tengo todo listo! 🥳
+
+### ¿Qué subí al canvas?
+
+He añadido —dentro del documento **Zip-folder-reader-and-scripts**— todos los archivos y artefactos que pediste. Puedes abrir ese archivo en el canvas y verlos/ copiarlos directamente. Los entregables añadidos son:
+
+* `encrypt-split.js` — Node.js: zip + AES-GCM encrypt + split en partes.
+* `decrypt-reassemble.js` — Node.js: recombina las partes y desencripta (para usar en CI o local).
+* `.github/workflows/reassemble-decrypt.yml` — GitHub Actions que ejecuta el `decrypt-reassemble.js` y sube artifacts.
+* `encrypt_and_split.sh` — script Bash simple que usa ZIP + GPG + split (muy portable).
+* `README.md` — instrucciones, opciones y notas de seguridad.
+
+(No pegué aquí el código —está todo en el canvas para que lo copies — así evitamos duplicar contenido.)
+
+---
+
+### ¿Cuál es *mejor*? (resumen práctico según tu situación)
+
+Depende de **lo que priorices**: privacidad, facilidad, multiplataforma o automatización.
+
+1. **Si priorizas PRIVACIDAD y quieres evitar costos/servicios extra:**
+   → **Bash + GPG** (el `encrypt_and_split.sh`) es el camino más simple y robusto.
+   Pros: pocas dependencias, fácil de auditar, funciona offline.
+   Contras: en Windows necesitas WSL/Git Bash o instalar GPG.
+
+2. **Si quieres AUTOMATIZACIÓN, cross-platform y reproducibilidad:**
+   → **Node.js + Actions** (`encrypt-split.js` + workflow).
+   Pros: se integra con CI (Actions), fácil de extender, funciona en cualquier SO con Node.
+   Contras: más dependencias (archiver, Node), y el runner de Actions tiene límites de memoria/tiempo si trabajas con archivos enormes.
+
+3. **Si prefieres mantener versionado y facilidad al colaborar (y aceptas posibles cuotas):**
+   → **Git LFS** (no lo incluí como script, pero es opción).
+   Pros: integridad con Git, menos bricolaje.
+   Contras: límites de almacenamiento/transferencia en cuentas gratuitas; posible costo.
+
+**Mi recomendación práctica para la mayoría de quienes comienzan:**
+
+* Empieza con **Bash + GPG** para entender el flujo (es lo más sencillo y seguro).
+* Cuando domines el flujo, migra a **Node.js + Actions** para automatizar y que GitHub reconstruya/desencripte cuando lo necesites.
+
+---
+
+### ¿Función: pensar / investigar / internet — cuál usar?
+
+Usa **los tres**, en este orden corto y repetible:
+
+1. **Pensar (define objetivos):** privacidad, quién accederá, límites de tamaño, si quieres automatizar.
+2. **Investigar a fondo:** lee la doc oficial del método que elijas (GPG, Git LFS, GitHub Actions, `archiver` si usas Node).
+3. **Internet (referencias y ejemplos):** busca tutoriales, ejemplos de `gpg`, `git lfs`, y ejemplos de Actions recientes.
+4. **Probar rápido:** haz una prueba local con un folder pequeño y valida el flujo (encriptar → split → subir partes → reensamblar → desencriptar).
+5. **Automatizar y documentar:** cuando todo vaya bien, añade el workflow de Actions y guarda la contraseña en **Secrets**.
+
+Ese ciclo (pensar → investigar → probar → automatizar) te evita perder tiempo y te da control.
+
+---
+
+### Siguientes pasos que puedo hacer ahora (elige lo que quieras y lo hago ya)
+
+* Preparo un **repo esqueleto** (estructura + archivos) listo para clonar.
+* Adapto los scripts para **Windows** (PowerShell) si lo necesitas.
+* Te doy una **mini-guía paso a paso** (comandos exactos de terminal) para empezar con GPG y probar un ejemplo pequeño.
+* Te explico cómo **poner el ENCRYPT_PASS en GitHub Secrets** y revisar permisos de Actions.
+
+Dime cuál de esos quieres que haga ahora y lo pongo en el canvas (o lo explico aquí inmediatamente). 💪✨

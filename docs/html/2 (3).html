@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Media Cards con Reproductor Único</title>
+<style>
+  :root{--bg:#0b0c0f;--card:#111213;--muted:#9aa0a6;--accent:#6ce6b6}
+  body{margin:0;font-family:Inter,Segoe UI,system-ui,Arial;background:linear-gradient(#050506,#0b0c0f);color:#eaf7f0;padding:18px}
+  .row{display:flex;gap:12px}
+  .controls{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:10px;border-radius:8px;cursor:pointer}
+  .thumb{height:96px;background:#000;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .meta{display:flex;justify-content:space-between;margin-top:8px;font-size:13px;color:var(--muted)}
+  .player{position:fixed;right:18px;top:18px;width:420px;background:#0f1113;padding:12px;border-radius:10px}
+  .player .viewport{height:240px;background:#000;border-radius:6px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .player button{margin-right:6px;padding:6px 8px;border-radius:6px;border:0;background:var(--card);color:var(--accent);cursor:pointer}
+  input[type=file]{display:none}
+  .small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <label style="background:var(--card);padding:8px;border-radius:8px;cursor:pointer">
+    Seleccionar archivos
+    <input id="file" type="file" multiple accept="audio/*,video/*" />
+  </label>
+  <input id="urlIn" placeholder="Pegar URL remota (GitHub Pages o CDN)" style="min-width:360px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit">
+  <button id="addUrl" style="padding:8px;border-radius:8px;border:0;background:var(--card);color:var(--accent);cursor:pointer">Agregar URL</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="player" id="player">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div>
+      <strong id="title">Ningún archivo</strong>
+      <div class="small" id="type">—</div>
+    </div>
+    <div id="idtag" class="small">ID: -</div>
+  </div>
+  <div class="viewport" id="viewport">Selecciona una tarjeta</div>
+  <div style="margin-top:8px;display:flex;align-items:center">
+    <button id="play">Play</button><button id="pause">Pause</button><button id="stop">Stop</button>
+    <div style="margin-left:auto" class="small" id="pos">00:00 / 00:00</div>
+  </div>
+</div>
+
+<script>
+  const grid = document.getElementById('grid');
+  const fileIn = document.getElementById('file');
+  const urlIn = document.getElementById('urlIn');
+  const addUrl = document.getElementById('addUrl');
+  const viewport = document.getElementById('viewport');
+  const titleEl = document.getElementById('title');
+  const typeEl = document.getElementById('type');
+  const idTag = document.getElementById('idtag');
+  const playBtn = document.getElementById('play');
+  const pauseBtn = document.getElementById('pause');
+  const stopBtn = document.getElementById('stop');
+  const posEl = document.getElementById('pos');
+
+  let items = [];
+  let mediaEl = null;
+  let nextId = 1;
+
+  function makeItemFromFile(file){
+    return {
+      id: 'i' + (nextId++),
+      name: file.name,
+      type: file.type || guessTypeFromName(file.name),
+      source: URL.createObjectURL(file),
+      orig: file
+    };
+  }
+  function makeItemFromURL(url){
+    const name = url.split('/').pop().split('?')[0] || url;
+    return { id: 'i' + (nextId++), name, type: guessTypeFromName(name), source: url, orig: null };
+  }
+  function guessTypeFromName(name){
+    const ext = name.split('.').pop().toLowerCase();
+    if(['mp4','webm','ogv','mov'].includes(ext)) return 'video/'+ext;
+    if(['mp3','ogg','wav','m4a'].includes(ext)) return 'audio/'+ext;
+    return '';
+  }
+
+  function renderCard(item){
+    const card = document.createElement('div'); card.className='card'; card.dataset.id=item.id;
+    const thumb = document.createElement('div'); thumb.className='thumb';
+    if(item.type.startsWith('video')){
+      const v = document.createElement('video'); v.src = item.source; v.muted=true; v.playsInline=true; v.preload='metadata';
+      v.style.width='100%'; v.style.height='100%'; v.style.objectFit='cover';
+      thumb.appendChild(v);
+    } else {
+      const ico = document.createElement('div'); ico.textContent='♫'; ico.style.fontSize='34px'; ico.style.color='#9aa0a6';
+      thumb.appendChild(ico);
+    }
+    const meta = document.createElement('div'); meta.className='meta';
+    meta.innerHTML = `<div style="font-weight:600">${item.name}</div><div class="small">ID: ${item.id}</div>`;
+    card.appendChild(thumb); card.appendChild(meta);
+    card.addEventListener('click', ()=>activate(item.id));
+    return card;
+  }
+
+  function addItems(array){
+    array.forEach(it=>{
+      items.push(it);
+      grid.appendChild(renderCard(it));
+    });
+  }
+
+  fileIn.addEventListener('change', (e)=> {
+    const files = Array.from(e.target.files).filter(f=>f.type.startsWith('video/')||f.type.startsWith('audio/'));
+    const created = files.map(makeItemFromFile);
+    addItems(created);
+    fileIn.value='';
+  });
+
+  addUrl.addEventListener('click', ()=>{
+    const v = urlIn.value.trim(); if(!v) return;
+    const it = makeItemFromURL(v);
+    addItems([it]);
+    urlIn.value='';
+  });
+
+  function activate(id){
+    const it = items.find(x=>x.id===id); if(!it) return;
+    titleEl.textContent = it.name; typeEl.textContent = it.type || 'unknown'; idTag.textContent='ID: '+it.id;
+    if(mediaEl){ mediaEl.pause(); mediaEl.remove(); mediaEl = null; }
+    if(it.type && it.type.startsWith('video')){
+      mediaEl = document.createElement('video'); mediaEl.playsInline=true; mediaEl.muted=true;
+    } else {
+      mediaEl = document.createElement('audio');
+    }
+    mediaEl.src = it.source; mediaEl.preload='auto';
+    mediaEl.style.width='100%'; mediaEl.style.height='100%';
+    mediaEl.addEventListener('timeupdate', ()=> posElUpdate());
+    mediaEl.addEventListener('ended', ()=> posElUpdate());
+    viewport.innerHTML=''; viewport.appendChild(mediaEl);
+    mediaEl.play().catch(()=>{});
+  }
+
+  function posElUpdate(){
+    if(!mediaEl) return;
+    const cur = mediaEl.currentTime || 0; const dur = mediaEl.duration || 0;
+    posEl.textContent = format(cur)+' / '+format(dur);
+  }
+  function format(s){ if(!s && s!==0) return '00:00'; const m = Math.floor(s/60), sec=Math.floor(s%60); return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0'); }
+
+  playBtn.addEventListener('click', ()=> mediaEl && mediaEl.play().catch(()=>{}));
+  pauseBtn.addEventListener('click', ()=> mediaEl && mediaEl.pause());
+  stopBtn.addEventListener('click', ()=> { if(mediaEl){ mediaEl.pause(); mediaEl.currentTime=0; posElUpdate(); } });
+
+  // Exponer items como JSON opcional
+  window.getMediaList = ()=> items.map(i=>({id:i.id,name:i.name,type:i.type,src:i.source}));
+</script>
+</body>
+</html>

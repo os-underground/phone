@@ -1,0 +1,415 @@
+
+
+
+>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>OHANA • Panel Dinámico (Estático)</title>
+<style>
+  /* RESET + BASE */
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f3f4f6;color:#0f172a}
+  a{color:inherit}
+  button{cursor:pointer}
+
+  /* NAVBAR */
+  .navbar{position:fixed;top:0;left:0;right:0;height:56px;
+    background:linear-gradient(90deg,#4f46e5,#3b82f6);
+    color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:1200;
+    box-shadow:0 6px 18px rgba(50,50,93,0.12)}
+  .brand{font-weight:700}
+
+  /* LAYOUT GRID */
+  .frame{display:grid;grid-template-columns:260px 1fr 340px;gap:18px;padding:72px 18px 18px 18px;min-height:100vh}
+  aside, main{background:#fff;border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(16,24,40,.06);overflow:auto}
+  .muted{color:#6b7280;font-size:13px}
+  .menu-title{font-weight:700;margin-bottom:8px;color:#0f172a}
+
+  /* CONTROLS */
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  input[type="text"], input[type="search"], textarea {padding:8px;border-radius:8px;border:1px solid #e6edf3;width:100%}
+  .small-btn{padding:7px 10px;border-radius:8px;border:1px solid #e6edf3;background:#fff}
+  .primary{background:#3b82f6;color:#fff;border:none}
+
+  /* GRID DE CARDS */
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+  .card{background:#f9fafb;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;max-height:460px}
+  .card-media{flex:1 1 auto;overflow:hidden;background:#111;display:flex;align-items:center;justify-content:center}
+  .card-media img,.card-media video{width:100%;height:auto;display:block}
+  .card-body{padding:10px;background:#fff;border-top:1px solid #eef2f7;flex-shrink:0}
+  .card-body p{font-size:13px;margin-bottom:6px;color:#0f172a}
+  .snippet{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#f1f5f9;padding:8px;border-radius:6px;font-size:12px;white-space:pre-wrap;overflow:auto;max-height:88px}
+
+  /* PAGINACIÓN */
+  .pager{display:flex;gap:6px;justify-content:center;margin-top:12px}
+
+  /* MOBILE */
+  @media (max-width:960px){
+    .frame{grid-template-columns:1fr;padding:72px 12px 12px 12px}
+    aside.left, aside.right{display:none;position:fixed;top:56px;bottom:0;width:84%;z-index:1400;box-shadow:0 20px 40px rgba(2,6,23,0.2)}
+    aside.left.active, aside.right.active{display:block}
+    iframe.embedded{height:60vh;width:100%;border-radius:10px;border:1px solid #e6edf3}
+    .card{max-height:none}
+  }
+
+  /* footer small */
+  footer{padding:8px;text-align:center;color:#64748b;font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div style="display:flex;gap:10px;align-items:center">
+    <button id="openLeft" class="small-btn">☰</button>
+    <div class="brand">OHANA • Panel</div>
+    <div class="muted" style="margin-left:8px">Gestor estático y editor local</div>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center">
+    <input id="globalSearch" type="search" placeholder="Buscar posts, imágenes, apps..." style="width:320px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.18)">
+    <button id="openRight" class="small-btn">☰</button>
+  </div>
+</div>
+
+<!-- FRAME -->
+<div class="frame">
+
+  <!-- LEFT ASIDE: herramientas y navegación -->
+  <aside class="left" id="leftSidebar">
+    <div class="menu-title">Herramientas</div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <label class="muted">Seleccionar archivos</label>
+      <input id="fileInput" type="file" multiple accept="image/*,video/*,audio/*,.pdf,.html" />
+      <label class="muted">Seleccionar carpeta (webkitdirectory)</label>
+      <input id="folderInput" type="file" webkitdirectory multiple />
+      <div style="display:flex;gap:6px">
+        <button id="loadDemo" class="small-btn">Cargar demo</button>
+        <button id="clearLocal" class="small-btn">Limpiar cache</button>
+      </div>
+
+      <label class="muted">Manifests (repositorio)</label>
+      <div style="display:flex;gap:6px">
+        <input id="manifestUrl" type="text" placeholder="/data/posts.json" value="/data/posts.json"/>
+        <button id="fetchManifest" class="small-btn primary">Cargar</button>
+      </div>
+
+      <label class="muted">Filtros rápidos</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button data-filter="all" class="small-btn">Todos</button>
+        <button data-filter="image" class="small-btn">Imágenes</button>
+        <button data-filter="video" class="small-btn">Videos</button>
+        <button data-filter="audio" class="small-btn">Audios</button>
+        <button data-filter="app" class="small-btn">Apps</button>
+      </div>
+
+      <label class="muted">Orden</label>
+      <div style="display:flex;gap:6px;">
+        <button id="sortOld" class="small-btn">Más antiguos</button>
+        <button id="sortNew" class="small-btn">Más nuevos</button>
+      </div>
+    </div>
+
+    <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f7" />
+    <div class="menu-title">Resumen</div>
+    <div id="summary" class="muted">0 items</div>
+
+    <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f7" />
+    <div class="menu-title">Importar / Exportar</div>
+    <div style="display:flex;gap:6px">
+      <input id="uploadJson" type="file" accept="application/json" />
+      <button id="exportJson" class="small-btn">Exportar manifest</button>
+    </div>
+    <div class="muted" style="margin-top:8px">Exporta manifest para subir al repo (data/*.json)</div>
+  </aside>
+
+  <!-- MAIN: feed con cards -->
+  <main>
+    <h2 style="margin-bottom:8px">Feed</h2>
+    <p class="muted" style="margin-bottom:12px">Selecciona archivos o carga un manifest.json desde tu repo. Las cards se cargan perezosamente (solo lo visible).</p>
+
+    <div class="controls">
+      <input id="filterInput" type="text" placeholder="Filtrar por nombre, año o tag..." style="flex:1" />
+      <select id="perPage" style="width:120px;padding:8px;border-radius:8px;border:1px solid #e6edf3">
+        <option value="8">8 / página</option>
+        <option value="12" selected>12 / página</option>
+        <option value="20">20 / página</option>
+      </select>
+    </div>
+
+    <div id="mediaGrid" class="grid" aria-live="polite"></div>
+    <div id="pager" class="pager" style="margin-top:12px;display:flex;gap:8px;justify-content:center"></div>
+  </main>
+
+  <!-- RIGHT ASIDE: editor / preview -->
+  <aside class="right" id="rightSidebar">
+    <div class="menu-title">Editor / Preview</div>
+
+    <div class="muted" style="margin-bottom:8px">Selecciona una card para editar metadatos o pegar una ruta y generar snippet.</div>
+
+    <label class="muted">Snippet o ruta (/imagen.jpg)</label>
+    <input id="manualInput" type="text" placeholder="/imagen.png" />
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button id="genManual" class="small-btn primary">Generar snippet</button>
+      <button id="copyManual" class="small-btn">Copiar snippet</button>
+    </div>
+    <div style="margin-top:8px"><textarea id="manualOutput" class="snippet" readonly placeholder="El snippet aparecerá aquí..."></textarea></div>
+
+    <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f7" />
+    <div id="editorPane" style="display:none">
+      <div style="display:flex;gap:8px;align-items:center"><strong id="editTitle">Editar</strong><span class="muted" id="editType"></span></div>
+      <label class="muted">Título</label>
+      <input id="editName" type="text" />
+      <label class="muted">Tags (coma separadas)</label>
+      <input id="editTags" type="text" />
+      <label class="muted">Fecha (ISO)</label>
+      <input id="editDate" type="text" />
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button id="saveMeta" class="small-btn primary">Guardar</button>
+        <button id="cancelEdit" class="small-btn">Cancelar</button>
+      </div>
+    </div>
+
+    <hr style="margin:12px 0;border:none;border-top:1px solid #eef2f7" />
+    <div class="menu-title">Mini preview</div>
+    <div id="miniPreview" class="muted">Nada seleccionado</div>
+  </aside>
+</div>
+
+<footer>
+  <small>OHANA • Panel estático • todo en uno — No requiere servidor • © <span id="year"></span></small>
+</footer>
+
+<!-- COOKIE CONSENT (simple y local) -->
+<div id="cookieBar" style="position:fixed;left:12px;right:12px;bottom:12px;background:#111;color:#fff;padding:10px;border-radius:8px;display:none;z-index:2000;align-items:center;justify-content:space-between;">
+  <div style="flex:1">Usamos almacenamiento local para guardar ediciones y caches. Acepta para continuar con la experiencia guardada localmente.</div>
+  <div style="display:flex;gap:8px;margin-left:12px">
+    <button id="declineCookies" class="small-btn">No aceptar</button>
+    <button id="acceptCookies" class="small-btn primary">Aceptar</button>
+  </div>
+</div>
+
+<script>
+/* ====== Config y estado ====== */
+const IMG_EXT = ['jpg','jpeg','png','gif','webp','heic','heif'];
+const VID_EXT = ['mp4','webm','ogg','mov','mkv'];
+const AUD_EXT = ['mp3','wav','aac','ogg','m4a'];
+const IFR_EXT = ['pdf','html','htm'];
+
+const fileInput = document.getElementById('fileInput');
+const folderInput = document.getElementById('folderInput');
+const mediaGrid = document.getElementById('mediaGrid');
+const summary = document.getElementById('summary');
+const filterInput = document.getElementById('filterInput');
+const globalSearch = document.getElementById('globalSearch');
+const perPageSelect = document.getElementById('perPage');
+const pager = document.getElementById('pager');
+const manifestUrl = document.getElementById('manifestUrl');
+const fetchManifestBtn = document.getElementById('fetchManifest');
+const uploadJson = document.getElementById('uploadJson');
+const exportJson = document.getElementById('exportJson');
+const manualInput = document.getElementById('manualInput');
+const manualOutput = document.getElementById('manualOutput');
+const genManual = document.getElementById('genManual');
+const copyManual = document.getElementById('copyManual');
+const miniPreview = document.getElementById('miniPreview');
+const editorPane = document.getElementById('editorPane');
+const editName = document.getElementById('editName');
+const editTags = document.getElementById('editTags');
+const editDate = document.getElementById('editDate');
+const saveMeta = document.getElementById('saveMeta');
+const cancelEdit = document.getElementById('cancelEdit');
+const cookieBar = document.getElementById('cookieBar');
+const acceptCookies = document.getElementById('acceptCookies');
+const declineCookies = document.getElementById('declineCookies');
+document.getElementById('year').textContent = new Date().getFullYear();
+
+let allItems = [];     // { id, name, ext, type, blobUrl, repoPath, lastModified, tags:[], date }
+let page = 1;
+let cookieAccepted = localStorage.getItem('ohana_cookies') === 'yes';
+
+/* ====== Helpers ====== */
+function extOf(name){ return (name.split('.').pop()||'').toLowerCase(); }
+function typeOf(ext){
+  if(IMG_EXT.includes(ext)) return 'image';
+  if(VID_EXT.includes(ext)) return 'video';
+  if(AUD_EXT.includes(ext)) return 'audio';
+  if(IFR_EXT.includes(ext)) return 'iframe';
+  return 'document';
+}
+function genId(){ return 'id'+Math.random().toString(36).slice(2,9); }
+function nameDate(name){ const m = name.match(/(19|20)\d{2}/); return m ? m[0] : ''; }
+function repoPath(name){ return '/' + name; }
+
+/* ====== IntersectionObserver para lazy-load de medias ====== */
+const io = new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      const el = entry.target;
+      const src = el.getAttribute('data-src');
+      if(src){
+        if(el.tagName === 'IMG' || el.tagName === 'VIDEO'){
+          el.src = src;
+        } else if(el.tagName === 'IFRAME'){
+          el.src = src;
+        } else {
+          el.setAttribute('href', src);
+        }
+        el.removeAttribute('data-src');
+        io.unobserve(el);
+      }
+    }
+  });
+},{rootMargin:'200px 0px'});
+
+/* ====== Render card (no inserta src directo, usa data-src para lazy load) ====== */
+function createCard(item){
+  const card = document.createElement('div'); card.className='card';
+
+  const mediaWrapper = document.createElement('div'); mediaWrapper.className='card-media';
+  // element placeholder
+  if(item.type==='image'){
+    const img = document.createElement('img'); img.alt = item.name; img.loading='lazy'; img.setAttribute('data-src', item.blobUrl||item.repoPath);
+    mediaWrapper.appendChild(img); io.observe(img);
+  } else if(item.type==='video'){
+    const v = document.createElement('video'); v.controls=true; v.playsInline=true; v.setAttribute('data-src', item.blobUrl||item.repoPath);
+    mediaWrapper.appendChild(v); io.observe(v);
+  } else if(item.type==='audio'){
+    const a = document.createElement('audio'); a.controls=true; a.setAttribute('data-src', item.blobUrl||item.repoPath);
+    mediaWrapper.appendChild(a); io.observe(a);
+  } else if(item.type==='iframe'){
+    const ifr = document.createElement('iframe'); ifr.setAttribute('data-src', item.blobUrl||item.repoPath); ifr.style.width='100%'; ifr.style.height='200px';
+    mediaWrapper.appendChild(ifr); io.observe(ifr);
+  } else {
+    const a = document.createElement('a'); a.textContent = 'Abrir'; a.target='_blank'; a.setAttribute('data-src', item.blobUrl||item.repoPath);
+    mediaWrapper.appendChild(a); io.observe(a);
+  }
+
+  const body = document.createElement('div'); body.className='card-body';
+  const title = document.createElement('p'); title.innerHTML = `<strong>${item.name}</strong> <span class="muted">• ${item.type}</span>`;
+  const meta = document.createElement('p'); meta.className='muted'; meta.textContent = `Fecha en nombre: ${item.nameDate||'—'} · Últ mod: ${item.lastModified? new Date(item.lastModified).toLocaleString() : '—'}`;
+  const snippetRepo = generateSnippet(item.repoPath, item.name, item.ext);
+  const snippetLocal = generateSnippet(item.blobUrl || item.repoPath, item.name, item.ext);
+  const ta = document.createElement('div'); ta.className='snippet'; ta.textContent = snippetRepo;
+
+  const row = document.createElement('div'); row.style.display='flex'; row.style.gap='8px'; row.style.marginTop='8px';
+  const copyRepo = document.createElement('button'); copyRepo.className='small-btn'; copyRepo.textContent='Copiar repo';
+  const copyLocal = document.createElement('button'); copyLocal.className='small-btn'; copyLocal.textContent='Copiar local';
+  const editBtn = document.createElement('button'); editBtn.className='small-btn'; editBtn.textContent='Editar';
+  const dl = document.createElement('a'); dl.className='small-btn'; dl.textContent='Descargar'; dl.href = item.blobUrl || item.repoPath; dl.download = item.name;
+
+  copyRepo.onclick = ()=>{ copyToClipboard(snippetRepo); ta.textContent = snippetRepo; miniPreview.innerHTML = snippetRepo; };
+  copyLocal.onclick = ()=>{ copyToClipboard(snippetLocal); ta.textContent = snippetLocal; miniPreview.innerHTML = ''; miniPreview.appendChild(document.createTextNode('Vista local:')); };
+  editBtn.onclick = ()=> openEditor(item);
+  row.appendChild(copyRepo); row.appendChild(copyLocal); row.appendChild(editBtn); row.appendChild(dl);
+
+  body.appendChild(title); body.appendChild(meta); body.appendChild(ta); body.appendChild(row);
+  card.appendChild(mediaWrapper); card.appendChild(body);
+  return card;
+}
+
+/* ====== Snippet generator ====== */
+function generateSnippet(path, name, ext){
+  const e = (ext||name.split('.').pop()).toLowerCase();
+  let tag;
+  if(IMG_EXT.includes(e)) tag = `<img src="${path}" alt="${name}" style="width:100%;">`;
+  else if(VID_EXT.includes(e)) tag = `<video controls src="${path}" style="width:100%;"></video>`;
+  else if(AUD_EXT.includes(e)) tag = `<audio controls src="${path}" style="width:100%;"></audio>`;
+  else if(IFR_EXT.includes(e)) tag = `<iframe src="${path}" style="width:100%; height:200px; border:none;"></iframe>`;
+  else tag = `<a href="${path}" target="_blank" style="display:inline-block; width:100%;">Abrir ${name}</a>`;
+  return `<div style="width:100%; margin:1em 0;">\n  ${tag}\n</div>`;
+}
+function copyToClipboard(txt){ navigator.clipboard?.writeText(txt).catch(()=>{ const t=document.createElement('textarea'); t.value=txt; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }); }
+
+/* ====== UI: render grid with pagination and lazy load ====== */
+function refreshUI(rawFilter=''){
+  const per = parseInt(perPageSelect.value,10) || 12;
+  let list = allItems.slice();
+  // filter text or tag
+  const q = (rawFilter || filterInput.value || globalSearch.value || '').toLowerCase().trim();
+  if(q){
+    list = list.filter(i => (i.name || '').toLowerCase().includes(q) || (i.tags || []).join(' ').toLowerCase().includes(q) || (i.nameDate || '').includes(q));
+  }
+  // store summary
+  summary.textContent = `${list.length} items`;
+  // pagination
+  const total = Math.max(1, Math.ceil(list.length / per));
+  if(page > total) page = total;
+  const start = (page-1)*per, end = start + per;
+  const pageItems = list.slice(start,end);
+
+  // render cards
+  mediaGrid.innerHTML = '';
+  if(pageItems.length === 0){ mediaGrid.innerHTML = '<div class="muted">Sin resultados</div>'; pager.innerHTML=''; return; }
+  pageItems.forEach(item => mediaGrid.appendChild(createCard(item)));
+
+  // render pager
+  pager.innerHTML = '';
+  const createBtn = (txt, idx) => {
+    const b = document.createElement('button'); b.textContent = txt; b.className='small-btn';
+    b.onclick = ()=>{ page = idx; refreshUI(rawFilter); window.scrollTo({top:120,behavior:'smooth'}); };
+    return b;
+  };
+  if(page>1) pager.appendChild(createBtn('«', page-1));
+  pager.appendChild(createBtn(page.toString(), page));
+  if(page < total) pager.appendChild(createBtn('»', page+1));
+}
+
+/* ====== File processing from <input> ====== */
+function processFile(file){
+  const name = file.name;
+  const ext = extOf(name);
+  const type = typeOf(ext);
+  const blobUrl = URL.createObjectURL(file);
+  const lastModified = file.lastModified || Date.now();
+  const nd = nameDate(name);
+  return { id: genId(), name, ext, type, blobUrl, repoPath: repoPath(name), lastModified, tags:[], nameDate: nd, date: new Date(lastModified).toISOString() };
+}
+function handleFiles(fileList, append=true){
+  const arr = Array.from(fileList).map(processFile);
+  if(!append) allItems = arr; else allItems = allItems.concat(arr);
+  // dedupe by name
+  const map = new Map();
+  for(const it of allItems) if(!map.has(it.name)) map.set(it.name, it);
+  allItems = Array.from(map.values());
+  // default sort by lastModified asc
+  allItems.sort((a,b)=> (a.lastModified||0) - (b.lastModified||0));
+  // persist if cookies accepted
+  if(cookieAccepted) localStorage.setItem('ohana_items', JSON.stringify(allItems));
+  refreshUI();
+}
+
+/* ====== Manifest loading (fetch JSON) ====== */
+async function loadManifest(url){
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('No se pudo cargar');
+    const json = await res.json();
+    // expect array of {name, repoPath?, date?, tags?}
+    const mapped = json.map(it => {
+      const name = it.name || it.title || (it.repoPath? it.repoPath.split('/').pop() : 'no-name');
+      const ext = extOf(name);
+      const type = typeOf(ext);
+      return { id: genId(), name, ext, type, blobUrl: null, repoPath: it.repoPath || repoPath(name), lastModified: it.date? Date.parse(it.date): 0, tags: it.tags||[], nameDate: nameDate(name), date: it.date||'' };
+    });
+    allItems = mapped;
+    if(cookieAccepted) localStorage.setItem('ohana_manifest', JSON.stringify(mapped));
+    page = 1; refreshUI();
+  }catch(e){
+    alert('Error cargando manifest: '+e.message);
+  }
+}
+
+/* ====== Editor ====== */
+let editingItem = null;
+function openEditor(item){
+  editingItem = item;
+  editorPan					;
+				
+}
+</scripr>
+				

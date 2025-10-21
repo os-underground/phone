@@ -1,0 +1,536 @@
+python3 -m http.server 8080
+$BROWSER http://localhost:8080/WEB/Prof.html
+$BROWSER http://localhost:8080/WEB/Prof.html}
+
+
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <title>Web-ALUMNOS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 10px;
+    }
+
+    .navbar,
+    .footer {
+      background: cyan;
+
+      /*background: #1e293b; color: #fff;*/
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      font-size: 0.95em;
+      scale: .5;
+    }
+
+    .container {
+      padding: 80px 16px 60px 16px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .menu-btn,
+    .login-btn,
+    .logout-btn {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 18px;
+      cursor: pointer;
+      margin: 0 4px;
+      font-size: 1em;
+    }
+
+    .menu-btn.active {
+      background: #16a34a;
+    }
+
+    .card {
+      background: linear-gradient(135deg, #e0f7fa 60%, #fff);
+      border: 2px solid #90caf9;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(30, 41, 59, 0.16);
+      margin: 16px 0;
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: scale(1.01);
+      border-color: #42a5f5;
+      box-shadow: 0 8px 24px rgba(30, 41, 59, 0.16);
+    }
+
+    .card h3 {
+      margin: 0 0 8px 0;
+      color: #5C6AC4;
+    }
+
+    .card a {
+      color: #3b82f6;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+
+    .card img {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 220px;
+      height: 100vh;
+      background: #fff;
+      box-shadow: 2px 0 14px rgba(30, 41, 59, 0.14);
+      padding: 24px 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.5s;
+      transform: translateX(-100%);
+    }
+
+    .sidebar:not(.hidden) {
+      transform: translateX(0);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .open-sidebar-btn {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      cursor: pointer;
+      z-index: 30;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.6em;
+      cursor: pointer;
+      align-self: flex-end;
+      margin-right: 14px;
+    }
+
+    /* Overlay for sidebar */
+    #sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.20);
+      z-index: 19;
+    }
+
+    #sidebar-overlay.hidden {
+      display: none;
+    }
+
+    /* Responsive, optional */
+    /*@media (max-width: 700px) {
+      .container { max-width: 98vw; padding: 80px 2vw 60px 2vw;}
+      .card img { width: 100%; }
+    }
+    */
+    .layout {
+      display: flex;
+      height: 100vh;
+      max-width: 1280px;
+      max-height: 100%;
+    }
+
+    .sidebar-left {
+      max-width: 220px;
+      width: 220px;
+      background: #f3f4f6;
+      padding: 16px;
+    }
+
+    .main-content {
+      max-width: 854px;
+      width: 500px;
+      background: #fff;
+      padding: 16px;
+    }
+
+    .sidebar-right {
+      max-width: 360px;
+      max-height: 720px;
+      width: 300px;
+      background: skyblue;
+      padding: 16px;
+      margin: 15px 15px;
+
+    }
+  </style>
+
+</head>
+
+
+<body style="max-width: 900px;">
+
+  <!-- Botón para abrir el sidebar -->
+  <button class="open-sidebar-btn" onclick="openSidebar()">☰</button>
+  <!-- Overlay -->
+  <div id="sidebar-overlay" class="hidden" onclick="closeSidebar()"></div>
+  <!-- Sidebar -->
+  <div id="sidebar" class="sidebar hidden">
+    <button onclick="closeSidebar()" class="close-btn">×</button>
+    <a href="index.html">Inicio</a>
+    <a href="Projects.html">Proyectos</a>
+    <a href="alumn.html">Alumnos</a>
+    <a href="config.html">⚙️ Configuración</a>
+
+
+  </div>
+
+  <div>
+
+  </div>
+  <!-- Navbar -->
+  <div class="navbar">
+    <span style="font-weight:bold;">Prof</span>
+    <span id="currentTime"></span>
+    <div>
+      <span>
+
+        <button onclick="logoutAll()" class="logout-btn">Cerrar Sesión</button>
+
+        <button class="menu-btn" onclick="window.location='index.html'">Todos</button>
+        <button class="menu-btn" onclick="window.location='Projects.html'">Proyectos</button>
+        <button class="menu-btn" onclick="window.location='alumn.html'">Alumnos</button>
+        <button class="menu-btn" onclick="window.location='config.html'">⚙️ Configuración</button>
+
+        <script>
+
+          function logoutAll() {
+            // Borra claves típicas de login y Google ID
+            const loginKeys = [
+              'login', 'user', 'token', 'auth', 'google_id', 'google_token',
+              'session', 'user_id', 'profile', 'email', 'access_token'
+            ];
+            localStorage(clear);
+
+            // Elimina esas claves si existen
+            localStorage(clear);
+            loginKeys.forEach(key => localStorage.removeItem(key));
+
+            // Opcional: Borra TODO el localStorage (descomenta si quieres borrar todo)
+            // localStorage.clear(); 
+
+            alert('Sesión cerrada y datos de login eliminados.');
+            // Opcional: Redirige al inicio
+            // window.location.href = 'index.html';
+          }
+        </script>
+
+</body>
+
+</html>
+
+</span>
+</div>
+</div>
+
+<span>
+
+  <header style="position: top; max-width: 110% ; max-height:144px; background:cyan; top:24px">
+    <h4>
+
+      WEB FOR STUDENTS
+    </h4>
+    <p>Para mis estudiantes</p>
+
+  </header>
+</span>
+
+
+
+<span>
+  <!--CONTENIDO DIVIDIDO__-->
+  <div class="layout">
+    <aside class="sidebar-left" style="max-height:200%">
+      <section style="background: pink;">
+
+        <ul>
+          <li><a href="">PERFIL PERSONAL</a></li>
+
+          <li><a href="">Class</a> </li>
+          <li><a href="">Semana 1: Informatica
+              avanzada, I.A.'s </a> </li>
+          <li><a href="">Semana 2: realidad
+              Virtual Aumentada inmersiva (VR)
+            </a> </li>
+          <li><a href=""> Sem 3: STOP MOTION
+              videometraje Profesional
+            </a> </li>
+          <li><a href="">Semn4: Robótica (circuitos
+              avanzados</a> </li>
+          <li><a href="">Sem 5: SCRATCH
+              (Programación)</a> </li>
+          <li><a href=""> </a> </li>
+          <li><a href=""> </a> </li>
+          <li><a href=""> </a> </li>
+          <li><a href=""> </a> </li>
+
+
+
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+        </ul>
+      </section>
+      <div><iframe src="">
+
+
+        </iframe>
+        <iframe src="https://www.youtube.com/?gl=ES" max-width="240px" max-height="144px">
+        </iframe>
+        <a href="https://www.youtube.com/?gl=ES">Youtube/español</a>
+      </div>
+      <section>
+
+        <div onclick="onclick" src="https://uploads.onecompiler.io/43sfe2g4e/43uaxht5p/Screenshot_20250808-004651.png">
+          <img src="https://uploads.onecompiler.io/43sfe2g4e/43uaxht5p/Screenshot_20250808-004651.png" style="max-height:480px;
+    max-width:480px;/*
+    allowfullscreen:onclick;*/">
+        </div>
+      </section>
+
+
+
+
+
+    </aside>
+
+
+    <!-- Menú o navegación -->
+    <main class="main-content">
+      <!-- Contenido principal -->
+
+
+      <!-- Feed principal -->
+      <!-- 
+</div>
+-->
+      <!--   
+<div class="container" id="mainContent" >
+    -->
+
+
+      <section>
+
+        <div class="card">
+          <h2>ESTE LOBO ES DE ALGUIEN QUE CONOZCO</h2>
+          <p>Hecho por ella-ARTE</p>
+          <img src="https://uploads.onecompiler.io/43sfe2g4e/43uaxht5p/Screenshot_20250808-025347.png"
+            style="max-width:80%; border-color:Pink; /*frameborder:15px;*/ border-radius:8px;">
+        </div>
+        <div class="card">
+          <h2>COMENTARIOS</h2>
+          <p>Comenta!</p>
+          <!--<label>
+    <input style="width:100px; height:40px;">
+          </label>
+    -->
+          <!-- Input y botón para comentar -->
+
+
+          <!--COMENTARIOS
+    
+    
+    </div>
+    <!-- Cards ejemplo, pon aquí tu contenido -->
+          <div class="card">
+            <h3>Como unos chicos aprendieron en computación a diseñar un personaje para un videojuego</h3>
+            <img src="https://uploads.onecompiler.io/43sfe2g4e/43uaxht5p/image_1756007342901.png">
+          </div>
+          <div class="card">
+            <h3>Alumnos de Verano</h3>
+            <p>Pre-view del juego creado en GDevelop.io</p>
+            <iframe src="https://game-previews.gdevelop.io/1756025858926-496232/index.html" max-width="480px"
+              width="89%" height="360"></iframe>
+            <a href="https://game-previews.gdevelop.io/1755844196785-371778/index.html">Pantalla Completa</a>
+          </div>
+          <div class="card">
+            <h3>FLAPPY BIRD a DINO</h3>
+            <iframe src="https://game-previews.gdevelop.io/1756236457613-516747/index.html" max-width="80%" width="360"
+              height="600"></iframe>
+            <a href="https://game-previews.gdevelop.io/1756236457613-516747/index.html">Jugar</a>
+          </div>
+          <div class="card">
+            <h3>MARIO BROS ONLINE</h3>
+            <iframe src="https://supermario.cloud/es/" max-width="80%" width="90%" height="700"></iframe>
+            <a href="https://supermario.cloud/es/">Jugar</a>
+          </div>
+          <div class="card">
+            <h3>Más Juegos</h3>
+            <iframe src="https://threejs.org/" width="300" height="300"></iframe>
+            <a href="https://threejs.org/">ThreeJS</a>
+          </div>
+        </div>
+      </section>
+      <section>
+
+        <div class="card">
+          <h3>DIBUJOS HECHOS POR @Getsy</h3>
+          <img src="https://uploads.onecompiler.io/43sfe2g4e/43uaxht5p/IMG_20250821_105020_878.jpg" width="50%">
+          <img src="https://uploads.onecompiler.io/43sfe2g4e/43uaxht5p/IMG_20250821_105028_452.jpg" width="50%">
+          <img src="https://uploads.onecompiler.io/43sfe2g4e/43uaxht5p/IMG_20250821_175426_555.jpg" width="50%">
+          <h3>Algunos faltan, hechos por más</h3>
+        </div>
+        <div class="card">
+          <h3>Un videito para ver una reseña de Los INCREIBLES 2</h3>
+          <iframe width="100%" height="400" src="https://www.youtube.com/embed/O6hLH52R0ok"
+            title="COMO ARRUINAR UNA FRANQUICIA - Increibles 2" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen></iframe>
+          <ul>
+            <li>¿Habías visto esta película?</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>CUENTA SOBRE TINKERCAD</h3>
+          <p>Objetos .obs para personajes y colocarlos</p>
+        </div>
+      </section>
+      <div class="card">
+        <img src="https://uploads.onecompiler.io/43sfe2g4e/43uaxht5p/569.jpg">
+      </div>
+      <div class="card">
+        <h3>VAMOS POR ORDEN</h3>
+        <div class="card">
+          <h3>SEMANA 1.- FUE SOBRE INTELIGENCIA ARTIFICIAL</h3>
+          <p>¿Recuerdas cómo fue en excel o word?</p>
+          <a href="openia">CHAT GPT - Open IA</a>
+          <a href="gemini">Gemini - Google</a>
+          <a href="copilot">Copilot - Microsoft</a>
+        </div>
+        <div class="card">
+          <h2>Semana 2</h2>
+          <h4>En realidad virtual avanzada crearon un personaje en tinkercad.</h4>
+          <a href="tinkercad.com">www.tinkercad.com</a>
+          <a href="mergecube.com">mergecube</a>
+          <!-- </div>
+    
+    <div class="card">
+    -->
+          <h3>¿QUÉ ES MERGE CUBE?</h3>
+          <p>Usarán la app mobile para usar VR y visualizar el cube.</p>
+          <iframe src="https://www.tinkercad.com/classrooms/bnnAjTGzmSO/designs" width="50%" height="100px"></iframe>
+          <a href="https://www.tinkercad.com/class/">Clase de tinkercad</a>
+        </div>
+        <div class="card">
+          <h3>Como compartimos los videos Stop MOTION?</h3>
+          <p>Solo quiero que sepan que sus videos stop motion son increíbles!! pero son obras maestras suyas.</p>
+          <img src="https://uploads.onecompiler.io/43sfe2g4e/43uaxht5p/IMG_20250805_111647_129.jpg">
+        </div>
+        <div class="card">
+          <h3>Semana 4 : ROBÓTICA</h3>
+          <p>En robótica buscamos la manera de armar circuitos de manera más sencilla.</p>
+          <a href="app.arduino.io">arduino.io</a>
+          <a href="Tinkercad.com">CIRCUITOS EN TINKERCAD</a>
+          <p>Recuerden buscar las clases y no perder las contraseñas.</p>
+        </div>
+        <div class="card">
+          <h2>Semana 5: Desarrollador de juegos con Scratch</h2>
+          <ul>
+            <li><a href="lightbot.com">Lunes: Lightbot</a></li>
+            <li>Martes: Scratch</li>
+            <li>Miércoles: GDevelop</li>
+          </ul>
+          <p>Los demás días los usamos para el gran día y las herramientas se los llevarán a casa.</p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</span>
+
+
+
+<!-- Footer -->
+<div class="footer">
+  <section>
+
+    <span>
+      © 2025 WEB by Prof. Oscar Cruz®™°|Para: Alumnos. ¡Felicidades, los echaré de menos! 😃
+    </span>
+    <span>
+      <p>su profesor esta orgulloso, sé que fue dificil, pero aprendieron mucho mas de lo que creen :)</p>
+    </span>
+
+    <!--</div>-->
+  </section>
+  <section>
+    <span>
+      <a href="#" style="color:#fff;">Contacto</a>
+    </span>
+
+  </section>
+</div>
+
+<script>
+
+  // Actualiza la hora
+  function showTime() {
+    document.getElementById('currentTime').textContent = new Date().toLocaleTimeString();
+  }
+  setInterval(showTime, 1000); showTime();
+
+  setInterval(showTime, Now); showTime();
+  // Sidebar
+  function openSidebar() {
+    document.getElementById('sidebar').classList.remove('hidden');
+    document.getElementById('sidebar-overlay').classList.remove('hidden');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.add('hidden');
+    document.getElementById('sidebar-overlay').classList.add('hidden');
+  }
+
+</script>
+</body>
+
+</html>

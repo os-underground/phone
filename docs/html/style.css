@@ -1,0 +1,43 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+
+
+img {
+    width: 100%;
+}
+
+div {
+    color: red;
+}
+
+* {
+    font-family: "lato", "arial", "sans-serif";
+} 
+
+h1, h2, h3 {
+    text-align: center;
+    font-family: "Anton", "verdena", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+footer {
+    background-color: gray;
+    text-align: center;
+    color: white;
+}
+
+#irAbajo {
+    
+    text-align: right;
+    
+}
+
+
+#copyright {
+    font-size: 24px;
+}
+
+span {
+    color: red;
+}

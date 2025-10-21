@@ -1,0 +1,46 @@
+
+
+<!-- HTML -->
+<div id="ai-chat">
+  <div id="chat-log"></div>
+  <input type="text" id="chat-input" placeholder="Escribe algo..." />
+  <button onclick="sendMessage()">Enviar</button>
+</div>
+<script>
+
+  
+// JS
+function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const log = document.getElementById('chat-log');
+  const userText = input.value;
+  log.innerHTML += `<div><b>Tú:</b> ${userText}</div>`;
+
+  // Respuestas muy básicas
+  let aiResponse = "No entendí, ¿puedes repetir?";
+  if (userText.toLowerCase().includes('hola')) aiResponse = "¡Hola! ¿En qué te ayudo?";
+  if (userText.toLowerCase().includes('ayuda')) aiResponse = "¡Claro! Pregúntame lo que quieras sobre el sistema.";
+
+  log.innerHTML += `<div><b>IA:</b> ${aiResponse}</div>`;
+  input.value = '';
+}/*
+2. Integrar una API de IA real (como OpenAI)
+Si quieres respuestas realmente inteligentes, puedes usar una API como la de OpenAI (requiere clave y conexión a internet). Aquí tienes un ejemplo básico usando fetch:
+js*/
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const log = document.getElementById('chat-log');
+  const userText = input.value;
+  log.innerHTML += `<div><b>Tú:</b> ${userText}</div>`;
+
+  // Llama a una API (esto requiere backend por seguridad, nunca pongas tu API key en JS del frontend)
+  const response = await fetch('TU_ENDPOINT_BACKEND/ask', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({message: userText})
+  });
+  const data = await response.json();
+  log.innerHTML += `<div><b>IA:</b> ${data.reply}</div>`;
+  input.value = '';
+}
+</script>

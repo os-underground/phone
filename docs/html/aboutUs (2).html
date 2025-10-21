@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About Us | FlavorVerse</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <!-- styling for navbar -->
+    <style>
+      :root {
+        --main: #0c356a;
+        --light: #0174be;
+        --accent: #fff0ce;
+        --yellow: #ffc436;
+        --text: #1d1d1d;
+      }
+
+      .navbar {
+        background-color: #fff;
+        z-index: 1;
+        width: 100%;
+        padding: 0 100px;
+        position: fixed;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        height: 80px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 0 0 20px 20px;
+      }
+
+      .navbar-h {
+        margin-top: 40px;
+      }
+
+      .navbar-list ul {
+        display: flex;
+        align-items: center;
+        list-style: none;
+        padding: 0;
+      }
+
+      .navbar-list ul li {
+        margin-left: 50px;
+      }
+
+      .navbar-list ul li a {
+        font-size: 18px;
+        text-decoration: none;
+        text-transform: uppercase;
+        color: var(--text);
+        font-weight: 700;
+        display: block;
+      }
+
+      .navbar ul li a:hover {
+        text-decoration: none;
+        color: var(--light);
+      }
+
+      .navbar-list ul li button {
+        background-color: var(--main);
+        text-transform: uppercase;
+        font-size: 16px;
+        border: none;
+        padding: 10px 20px;
+        font-weight: bold;
+        color: #fff;
+        border-radius: 9px;
+        cursor: pointer;
+        transition: 0.3s ease;
+      }
+
+      .navbar-list ul li button:hover {
+        background-color: var(--light);
+      }
+
+      .scroll {
+        background: #fff;
+        top: -100px;
+        border-radius: 20px;
+        width: 90%;
+        animation: fadedown 0.4s ease 0.75s forwards;
+      }
+
+      .navbar-brand {
+        cursor: pointer;
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      @keyframes fadedown {
+        0% {
+          top: -100px;
+        }
+        100% {
+          top: 20px;
+        }
+      }
+
+      .mid-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        /* margin-top: 100px; */
+      }
+
+      .mid-section h1 {
+        text-transform: uppercase;
+        margin-top: 80px;
+      }
+
+      .mid-section p {
+        color: var(--text);
+        line-height: 1.75;
+        width: 80%;
+        text-align: justify;
+      }
+
+      .mid-section details {
+        color: var(--text);
+        width: 80%;
+        margin-top: 20px;
+      }
+
+      .mid-section details summary {
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .mid-section details summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .mid-section details summary::marker {
+        display: none;
+      }
+
+      .mid-section details p {
+        width: 100%;
+        font-size: 0.9rem;
+        margin-top: 10px;
+        color: var(--text);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+      <div class="navbar-brand">
+        <img src="../../assets/img/logo/logo-1.png" alt="" width="80px" />
+      </div>
+
+      <div class="navbar-list">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="recipes.html">Recipes</a></li>
+          <li><a href="#">About Us</a></li>
+          <li>
+            <button>
+              <a style="color: #fff" href="../../index.html">Logout</a>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- BODY -->
+    <main class="container mid-section">
+      <!-- ABOUT US -->
+      <h1 class="head-text">About Us</h1>
+      <p>
+        Welcome to <b>FlavorVerse</b>, your go-to destination for culinary
+        inspiration and delightful recipes! We understand the joy that comes
+        from creating and savoring delicious meals, and our platform is designed
+        to make that experience even more enjoyable.
+
+        <br />
+        <br />
+
+        At FlavorVerse, we believe that great recipes should be shared and
+        celebrated. Our online recipe platform is a haven for food enthusiasts,
+        whether you're a seasoned chef or a kitchen newbie. We've curated a
+        diverse collection of mouthwatering recipes, each accompanied by
+        detailed ingredients, vibrant images, and helpful videos to guide you
+        through the cooking process.
+
+        <br />
+        <br />
+
+        What sets us apart is our commitment to accessibility. You don't need to
+        create an account to explore our treasure trove of recipes. Simply dive
+        in, browse through our curated selection, and find the perfect dish for
+        any occasion. However, for those who want to take their culinary journey
+        a step further, we invite you to join our community by creating an
+        account. By doing so, you can not only save your favorite recipes but
+        also contribute your culinary creations to inspire others.
+
+        <br />
+        <br />
+
+        At FlavorVerse, we celebrate the joy of cooking, the art of sharing, and
+        the camaraderie that comes from a shared love of good food. Join us on
+        this delicious adventure, and let's make every meal a celebration!
+      </p>
+
+      <br />
+
+      <!-- FAQs -->
+      <h1 class="head-text">FAQs</h1>
+      <details>
+        <summary style="color: var(--text)">
+          Do I need to create an account to access recipes?
+        </summary>
+        <p>
+          No, you can browse and explore recipes without creating an account.
+          However, having an account allows you to save and manage your favorite
+          recipes and contribute your own culinary creations.
+        </p>
+      </details>
+
+      <details>
+        <summary style="color: var(--text)">
+          How do I create an account?
+        </summary>
+        <p>
+          Click on the "Login/Register" button and follow the simple
+          registration process. You'll need to provide a valid email address and
+          create a password. Once registered, you can personalize your profile.
+        </p>
+      </details>
+
+      <details>
+        <summary style="color: var(--text)">
+          Are the recipes suitable for all skill levels?
+        </summary>
+        <p>
+          Yes, our collection includes recipes for all skill levels, from
+          beginners to seasoned chefs. Each recipe comes with detailed
+          instructions, and include helpful videos to guide you through the
+          cooking process.
+        </p>
+      </details>
+
+      <details>
+        <summary style="color: var(--text)">
+          Is there a mobile app for FlavorVerse?
+        </summary>
+        <p>
+          Currently, we do not have a dedicated mobile app. However, we are
+          working on that hopefully, soon we will launch a mobile version.
+        </p>
+      </details>
+
+      <details>
+        <summary style="color: var(--text)">
+          Can I use the recipes for commercial purposes?
+        </summary>
+        <p>
+          The recipes, images, and videos on FlavorVerse are intended for
+          personal, non-commercial use. Reproduction or distribution without
+          explicit permission is prohibited.
+        </p>
+      </details>
+
+      <details>
+        <summary style="color: var(--text)">
+          How often are new recipes added to the platform?
+        </summary>
+        <p>
+          We regularly update our recipe collection with new and exciting
+          dishes. The frequency of updates may vary, but we strive to keep our
+          content fresh and inspiring.
+        </p>
+      </details>
+
+      <br />
+      <br />
+
+      <!-- TERMS OF SERVICE -->
+      <h1 class="head-text">Terms of Service</h1>
+      <p>
+        &#9865; Acceptance of Terms: By accessing or using FlavorVerse, you
+        agree to comply with and be bound by these Terms of Service.
+
+        <br />
+
+        &#9865; User Accounts: While an account is not required to browse
+        recipes, creating one allows you to add and manage your recipes. You are
+        responsible for maintaining the confidentiality of your account
+        information.
+
+        <br />
+
+        &#9865; Recipe Contributions: Users who contribute recipes to
+        FlavorVerse are responsible for the accuracy and originality of the
+        content. By submitting a recipe, you grant FlavorVerse the right to
+        display, modify, and distribute the content.
+
+        <br />
+
+        &#9865; Content Usage: All recipes, images, and videos on FlavorVerse
+        are for personal, non-commercial use. Reproduction or distribution
+        without explicit permission is prohibited.
+
+        <br />
+
+        &#9865; Code of Conduct: Users must adhere to a respectful and inclusive
+        community. Any form of harassment, discrimination, or inappropriate
+        content will not be tolerated.
+
+        <br />
+
+        &#9865; Modification of Service: FlavorVerse reserves the right to
+        modify or discontinue the service, temporarily or permanently, with or
+        without notice.
+      </p>
+
+      <br />
+
+      <!-- PRIVACY POLICY -->
+      <h1 class="head-text">Privacy Policy</h1>
+      <p>
+        &#9865; Information Collection: FlavorVerse collects minimal personal
+        information for account creation and functionality. This may include
+        your username, email address, and other data you choose to provide.
+
+        <br />
+
+        &#9865; Cookies: We use cookies to enhance your browsing experience. You
+        can adjust your browser settings to disable cookies, but this may affect
+        the functionality of the website.
+
+        <br />
+
+        &#9865; Third-Party Links: FlavorVerse may contain links to third-party
+        websites. We are not responsible for the privacy practices or content of
+        these sites.
+
+        <br />
+
+        &#9865; Security: We employ reasonable security measures to protect your
+        personal information. However, no online transmission or storage method
+        is 100% secure.
+
+        <br />
+
+        &#9865; Updates to Privacy Policy: We reserve the right to update our
+        Privacy Policy. Users will be notified of significant changes.
+      </p>
+
+      <p>
+        By using FlavorVerse, you consent to the terms outlined in both the
+        Terms of Service and Privacy Policy. If you have any questions, please
+        contact us at <b>flavorverse@gmail.com</b>.
+      </p>
+
+      <br />
+    </main>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <footer class="container">
+        <small class="container text">
+          <center>© 2023 FlavorVerse. All rights reserved.</center>
+        </small>
+      </footer>
+    </div>
+
+    <script src="../../assets/js/index.js"></script>
+  </body>
+</html>

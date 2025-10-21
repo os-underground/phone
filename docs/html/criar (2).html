@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Criar Cofre</title>
+  <style>
+    /* Inclua o estilo que você mencionou para manter o design */
+  </style>
+</head>
+
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>Criar Cofre</h1>
+    <button onclick="window.location.href = 'cofre.html';">Voltar</button>
+  </div>
+
+  <!-- Exibição do valor recebido de cofre.html -->
+  <div class="coffer-container">
+    <h3>Valor Recebido do Cofre:</h3>
+    <p id="valorCriado">Nenhum valor recebido.</p>
+  </div>
+
+  <script>
+    // Recuperando o valor armazenado no localStorage
+    const valorCriar = localStorage.getItem('valorCriar');
+
+    if (valorCriar) {
+      // Exibe o valor no criar.html
+      document.getElementById('valorCriado').textContent = 'Valor recebido para criação: ' + valorCriar;
+    } else {
+      document.getElementById('valorCriado').textContent = 'Nenhum valor recebido.';
+    }
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+    <title>Dessert Recipes</title>
+    <!-- styling for navbar -->
+    <style>
+      :root {
+        --main: #0c356a;
+        --light: #0174be;
+        --accent: #fff0ce;
+        --yellow: #ffc436;
+        --text: #1d1d1d;
+      }
+
+      .navbar {
+        background-color: #fff;
+        z-index: 1;
+        width: 100%;
+        padding: 0 100px;
+        position: fixed;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        height: 80px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 0 0 20px 20px;
+      }
+
+      .navbar-h {
+        margin-top: 40px;
+      }
+
+      .navbar-list ul {
+        display: flex;
+        align-items: center;
+        list-style: none;
+        padding: 0;
+      }
+
+      .navbar-list ul li {
+        margin-left: 50px;
+      }
+
+      .navbar-list ul li a {
+        font-size: 18px;
+        text-decoration: none;
+        text-transform: uppercase;
+        color: var(--text);
+        font-weight: 700;
+        display: block;
+      }
+
+      .navbar ul li a:hover {
+        text-decoration: none;
+        color: var(--light);
+      }
+
+      .navbar-list ul li button {
+        background-color: var(--main);
+        text-transform: uppercase;
+        font-size: 16px;
+        border: none;
+        padding: 10px 20px;
+        font-weight: bold;
+        color: #fff;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.3s ease;
+      }
+
+      .navbar-list ul li button:hover {
+        background-color: var(--light);
+      }
+
+      .navbar-list ul li button a {
+        color: #fff;
+        text-decoration: none;
+      }
+
+      .navbar-list ul li button a:hover {
+        color: #fff;
+      }
+
+      .scroll {
+        background: #fff;
+        top: -100px;
+        border-radius: 20px;
+        width: 90%;
+        animation: fadedown 0.4s ease 0.75s forwards;
+      }
+
+      .navbar-brand {
+        cursor: pointer;
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      @keyframes fadedown {
+        0% {
+          top: -100px;
+        }
+        100% {
+          top: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+      <div class="navbar-brand">
+        <img src="../../assets/img/logo/logo-1.png" alt="" width="80px" />
+      </div>
+
+      <div class="navbar-list">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="recipes.html">Recipes</a></li>
+          <li><a href="aboutUs.html">About Us</a></li>
+          <li>
+            <button>
+              <a style="color: #fff" href="../../index.html">Logout</a>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- BODY -->
+    <main class="container recipe-container">
+      <div class="recipe-head">
+        <article>
+          <h2>Dessert Recipes</h2>
+          <p>
+            Scroll down to view the recipes or click the dropdown menu to see
+            other categories
+          </p>
+          <details role="list">
+            <summary aria-haspopup="listbox">Dessert</summary>
+            <ul role="listbox">
+              <li><a href="recipes.html">Starter</a></li>
+              <li><a href="maincourse.html">Main course</a></li>
+              <li><a href="pizza.html">Pizza</a></li>
+              <li><a href="cake.html">Cake</a></li>
+              <li><a href="noodles.html">Noodles</a></li>
+            </ul>
+          </details>
+        </article>
+      </div>
+
+      <!-- RECIPE 1 -->
+      <div class="recipes hidden">
+        <img src="../../assets/img/recipes/fluffy-waffles-r.jpg" alt="" />
+        <h3 style="margin-top: 10px; margin-bottom: 10px">
+          <center>Waffle</center>
+        </h3>
+        <p style="padding-left: 10px">
+          <b style="font-size: 24px; text-decoration: underline"
+            >Ingredients:</b
+          >
+          <br />
+          Egg 1 pc, Milk 200g/7oz, Butter 60g/2oz, Wheat flour 100g/3.5oz, Sugar
+          1 tbsp and Baking powder 1 tsp
+
+          <br />
+
+          <b>Filling:</b>
+          Red bean fillin, Sweet Potato filling and Walnut
+
+          <br />
+
+          <b>Sweet Potato Filling:</b>
+          200g Sweet potato, 20g Allulose (or sugar), 20g Room temperature
+          unsalted butter, 2 pinches of salt and 3-5 Tbsp Milk (depending on
+          sweet potato moisture level)
+          <br />
+          <br />
+
+          <b style="font-size: 24px; text-decoration: underline"
+            >Instructions:</b
+          >
+
+          <br />
+
+          1. In a mixing bowl, beat the egg. Add milk and melted butter to the
+          beaten egg. Mix well. <br />
+          2. In a separate bowl, combine the flour, sugar, baking powder, and
+          salt. Mix thoroughly. <br />
+          3. Gradually pour the wet ingredients into the bowl with the dry
+          ingredients. Mix everything together until you have a smooth batter.
+          Some small lumps are okay. <br />
+          4. Preheat your waffle iron according to its instructions. <br />
+          5. Once the waffle iron is ready, lightly grease it with oil or
+          cooking spray. Pour an appropriate amount of batter onto the preheated
+          waffle iron. The quantity will depend on the size of your iron. <br />
+          6. Close the waffle iron and cook for about 3-6 minutes. The time may
+          vary based on your waffle iron's capacity and the desired level of
+          crispness. <br />
+          7. Once the waffles are golden and crispy, carefully remove them from
+          the waffle iron. Serve warm with your favorite toppings like syrup,
+          fruit, whipped cream, or any other preferred additions.
+
+          <small>
+            <center>Enjoy these for a delightful dessert or brunch!</center>
+          </small>
+        </p>
+        <center>
+          <div class="recipes">
+            <iframe
+              style="margin-left: -45px"
+              width="859 px"
+              height="483 px"
+              class="video-box"
+              src="https://www.youtube.com/embed/C3x3-Aq18qQ?si=sW2V4Sl2WIxMz6UH"
+              title="YouTube video player"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+            >
+              >
+            </iframe>
+          </div>
+        </center>
+      </div>
+
+      <hr />
+
+      <!-- RECIPE 2 -->
+      <div class="recipes hidden">
+        <img src="../../assets/img/recipes/cream-donut.jpg" alt="" />
+        <h3 style="margin-top: 10px; margin-bottom: 10px">
+          <center>Strawberry Cream Donut</center>
+        </h3>
+        <p style="padding-left: 10px">
+          <b style="font-size: 24px; text-decoration: underline"
+            >Ingredients:</b
+          >
+          <br />
+          <b>Donut dough:</b>
+          300g Bread flour (can be use all-purpose flour), 54g, 1 Room
+          temperature egg, 45g (4.5Tbsp) Sugar, 5g (1.5tsp) Salt, 5g (0.8Tbsp)
+          Instant dry yeast, 140ml Warm milk and 40g Room temperature unsalted
+          butter
+
+          <br />
+
+          <b>Whipped cream:</b>
+          00g Heavy cream and 30g Sugar
+
+          <br />
+
+          <b>Toppings:</b>
+          Strawberry - Strawberry syrup (optional) - Sugar Powder
+
+          <br />
+          <br />
+
+          <b style="font-size: 24px; text-decoration: underline"
+            >Instructions:</b
+          >
+
+          <br />
+
+          1. Mix flour, sugar, and salt. Add the egg. Dissolve yeast in warm
+          milk; add to the mixture. Knead until smooth, then add butter and
+          knead until elastic. Let the dough rise until doubled.
+          <br />
+          2. Roll out dough and cut into donut shapes. Let the donuts rise again
+          for 15-20 minutes. Fry until golden brown on both sides. <br />
+          3. Whip heavy cream until soft peaks form. Gradually add sugar and
+          whip until stiff peaks form. <br />
+          4. Slice cooled donuts horizontally, creating a pocket. Fill with
+          whipped cream. Top with fresh strawberries and optional syrup. Dust
+          with sugar powder. beverage.
+          <br />
+
+          <small>
+            <center>
+              Enjoy it with pairing with your favorite beverage!
+            </center></small
+          >
+        </p>
+        <center>
+          <div class="recipes">
+            <iframe
+              style="margin-left: -45px"
+              width="859 px"
+              height="483 px"
+              class="video-box"
+              src="https://www.youtube.com/embed/N3eNXA6CO7I?si=zZNZOLP_8kxtGOM0"
+              title="YouTube video player"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+            >
+              >
+            </iframe>
+          </div>
+        </center>
+      </div>
+
+      <hr />
+
+      <!-- RECIPE 3 -->
+      <div class="recipes hidden">
+        <img src="../../assets/img/recipes/Japanese-Roll-Cake-.jpg" alt="" />
+        <h3 style="margin-top: 10px; margin-bottom: 10px">
+          <center>Swiss Roll Cake</center>
+        </h3>
+        <p style="padding-left: 10px">
+          <b style="font-size: 24px; text-decoration: underline"
+            >Ingredients:</b
+          >
+
+          <br />
+
+          5 Egg yolks, 1g Salt, 50g Sugar, 90g Cake flour, 2g Baking powder, 50g
+          Vegetable oil, 50g Milk, 5 Egg whites and 70g Sugar
+
+          <br />
+          <br />
+
+          <b style="font-size: 24px; text-decoration: underline"
+            >Instructions:</b
+          >
+
+          <br />
+
+          1. Preheat Oven at 350°F (180°C), line a baking sheet with parchment
+          paper. <br />
+          2. Whisk yolks, salt, sugar; sift in flour and baking powder. Add oil
+          and milk, mix. <br />
+          3. Beat egg whites with sugar until stiff peaks form. <br />
+          4. Gently fold meringue into batter. <br />
+          5. Spread batter on the baking sheet; bake for 15-18 mins. <br />
+          6. Roll the warm cake with parchment paper; cool completely. <br />
+          7. Unroll, add filling, and roll again. <br />
+          8. Wrap in plastic; refrigerate for 30 mins. <br />
+          9. Slice and enjoy your Swiss Roll Cake!
+        </p>
+        <center>
+          <div class="recipes">
+            <iframe
+              style="margin-left: -45px"
+              width="859 px"
+              height="483 px"
+              class="video-box"
+              src="https://www.youtube.com/embed/-6oKEiI6_N0?si=FkaaTA23N4aZablr"
+              title="YouTube video player"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+            >
+              >
+            </iframe>
+          </div>
+        </center>
+      </div>
+    </main>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <footer class="container">
+        <small class="container text">
+          <center>© 2023 FlavorVerse. All rights reserved.</center>
+        </small>
+      </footer>
+    </div>
+
+    <script defer src="../../assets/js/scroll.js"></script>
+    <script src="../../assets/js/index.js"></script>
+  </body>
+</html>

@@ -1,0 +1,360 @@
+### 
+
+
+<!-----
+Resumen rápido
+He limpiado y estructurado tu proyecto de inventario en tres archivos listos para pegar en tu repo: **index.html**, **assets/css/style.css**, **assets/js/app.js**. Funciona en GitHub Pages, guarda en localStorage, importa JSON/CSV/YAML/XLSX y exporta. Pega las tres piezas en las rutas que indica cada bloque y abre la página en GitHub Pages.
+
+---
+
+### Qué incluye (archivos y rutas)
+- **index.html** → raíz del repo (ozclef.github.io/pictures/index.html o en tu repo donde publiques)
+- **assets/css/style.css** → styles (pegar en assets/css/style.css)
+- **assets/js/app.js** → lógica CRUD, import/export y mini-IA local (pegar en assets/js/app.js)
+
+---
+
+### index.html
+```html
+
+--->
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Inventario — Tienda</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="brand">
+      <strong>Shop‑Admin</strong>
+      <div class="subtitle">Inventario · Guardado en local (browser)</div>
+    </div>
+    <div class="top-actions">
+      <input id="searchInput" placeholder="Buscar producto..." />
+      <input id="fileInput" type="file" accept=".json,.csv,.yml,.yaml,.xlsx,.xls" />
+      <button id="btnImport">Importar</button>
+      <button id="btnExportJson">Descargar JSON</button>
+      <button id="btnExportCsv">Descargar CSV</button>
+      <button id="btnClearStorage" title="Borrar todo">Borrar guardado</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar-left">
+      <ul>
+        <li><button onclick="showSection('inventory')">Inventario</button></li>
+        <li><button onclick="showSection('autos')">Panel Autos (placeholder)</button></li>
+      </ul>
+    </aside>
+
+    <section class="main-content">
+      <section id="inventory" class="section">
+        <div class="card form-card">
+          <h2 id="formTitle">Agregar producto</h2>
+          <form id="productForm">
+            <input type="hidden" id="productId" />
+            <label>Nombre <input id="productName" required /></label>
+            <label>Precio <input id="productPrice" type="number" step="0.01" required /></label>
+            <label>Cantidad <input id="productQuantity" type="number" required /></label>
+            <div class="row">
+              <button type="submit" id="saveBtn">Guardar</button>
+              <button type="button" id="resetBtn">Nuevo</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Lista de productos</h3>
+          <div id="productList" class="product-list"></div>
+          <div id="totalValue" class="total">Valor inventario: $0.00</div>
+        </div>
+
+        <div class="card">
+          <h3>Preguntas rápidas (mini-IA local)</h3>
+          <input id="questionInput" placeholder="Ej: ¿Cuántas cajas de coca quedan?" />
+          <div class="row">
+            <button id="askBtn">Preguntar (local)</button>
+          </div>
+          <pre id="answerBox" class="answer"></pre>
+        </div>
+      </section>
+
+      <section id="autos" class="section hidden">
+        <div class="card">
+          <h2>Panel de administración de autos (placeholder)</h2>
+          <p>Opcional: aquí puedes poner otro CRUD</p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">Proyecto listo para GitHub Pages · Guardado local · © 2025</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="assets/js/app.js"></script>
+
+<!---
+```
+
+---
+
+### assets/css/style.css
+```css----->
+<style>
+:root{
+  --bg:#f6f9fb; --accent:#0ea5e9; --muted:#666; --card:#ffffff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#eef6ff,#fff);color:#14213d}
+.navbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:linear-gradient(90deg,#43cea2,#185a9d);color:#fff;position:sticky;top:0;z-index:10}
+.brand strong{font-size:1.05rem}
+.brand .subtitle{font-size:0.8rem;color:rgba(255,255,255,0.9)}
+.top-actions{display:flex;gap:8px;align-items:center}
+.top-actions input[type="text"], .top-actions input[type="file"]{padding:6px;border-radius:6px;border:none}
+button{background:var(--accent);color:#fff;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
+.layout{display:flex;gap:18px;padding:20px;max-width:1200px;margin:20px auto}
+.sidebar-left{width:220px}
+.sidebar-left ul{list-style:none;padding:0}
+.sidebar-left li{margin-bottom:10px}
+.main-content{flex:1}
+.card{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 6px 24px rgba(10,20,40,0.06);margin-bottom:12px}
+.form-card input{width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #e6eef8}
+.row{display:flex;gap:8px;margin-top:12px}
+.product-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.product-card{background:linear-gradient(90deg,#fff,#f7fbff);padding:10px;border-radius:8px;border:1px solid #eef5ff;display:flex;flex-direction:column;gap:8px}
+.product-meta{display:flex;flex-direction:column}
+.product-actions{display:flex;gap:6px;justify-content:flex-end}
+.delete-btn{background:#ef4444;color:#fff;padding:6px 8px;border-radius:6px;border:none;cursor:pointer}
+.total{margin-top:12px;font-weight:bold}
+.hidden{display:none}
+.answer{background:#0f172a;color:#fff;padding:8px;border-radius:8px;min-height:60px;overflow:auto}
+.footer{padding:12px;text-align:center;color:var(--muted);font-size:0.9rem}
+@media (max-width:900px){.layout{flex-direction:column}.sidebar-left{width:100%}}
+</style>
+
+<!--
+```
+
+---
+
+### assets/js/app.js
+```javascript----->
+<script>
+// CRUD + import/export + mini-IA local
+const STORAGE_KEY = 'shop_admin_products_v1';
+const productForm = document.getElementById('productForm');
+const productListEl = document.getElementById('productList');
+const totalValueEl = document.getElementById('totalValue');
+const searchInput = document.getElementById('searchInput');
+const fileInput = document.getElementById('fileInput');
+const btnImport = document.getElementById('btnImport');
+const btnExportJson = document.getElementById('btnExportJson');
+const btnExportCsv = document.getElementById('btnExportCsv');
+const btnClearStorage = document.getElementById('btnClearStorage');
+const questionInput = document.getElementById('questionInput');
+const askBtn = document.getElementById('askBtn');
+const answerBox = document.getElementById('answerBox');
+let products = [];
+
+// helpers
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+const save = ()=> localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+const load = ()=> JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+// render
+function render(list=products){
+  productListEl.innerHTML = '';
+  list.forEach(p=>{
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    card.innerHTML = `
+      <div class="product-meta">
+        <h3>${escapeHtml(p.name)}</h3>
+        <span>Precio: $${Number(p.price).toFixed(2)}</span>
+        <span>Cantidad: ${p.quantity}</span>
+      </div>
+      <div class="product-actions">
+        <button data-id="${p.id}" class="edit-btn">Editar</button>
+        <button data-id="${p.id}" class="delete-btn">Borrar</button>
+      </div>`;
+    productListEl.appendChild(card);
+  });
+  const total = products.reduce((s,a)=> s + (Number(a.price)||0) * (Number(a.quantity)||0), 0);
+  totalValueEl.textContent = `Valor inventario: $${total.toFixed(2)}`;
+}
+
+// safe text
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
+
+// form handlers
+productForm.addEventListener('submit', e=>{
+  e.preventDefault();
+  const id = document.getElementById('productId').value || null;
+  const name = document.getElementById('productName').value.trim();
+  const price = Number(document.getElementById('productPrice').value) || 0;
+  const quantity = Number(document.getElementById('productQuantity').value) || 0;
+  if(!name) return alert('Nombre requerido');
+  if(id){
+    const i = products.findIndex(x=>x.id===id);
+    if(i>-1) { products[i] = { ...products[i], name, price, quantity }; }
+  } else {
+    products.unshift({ id: uid(), name, price, quantity });
+  }
+  save(); render(); productForm.reset(); document.getElementById('formTitle').textContent='Agregar producto';
+});
+
+// reset/new
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  productForm.reset(); document.getElementById('productId').value=''; document.getElementById('formTitle').textContent='Agregar producto';
+});
+
+// edit / delete via delegation
+productListEl.addEventListener('click', e=>{
+  const id = e.target.dataset?.id;
+  if(e.target.classList.contains('edit-btn') && id){
+    const p = products.find(x=>x.id===id);
+    if(!p) return;
+    document.getElementById('productId').value = p.id;
+    document.getElementById('productName').value = p.name;
+    document.getElementById('productPrice').value = p.price;
+    document.getElementById('productQuantity').value = p.quantity;
+    document.getElementById('formTitle').textContent = 'Editar producto';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  if(e.target.classList.contains('delete-btn') && id){
+    if(!confirm('Borrar este producto?')) return;
+    products = products.filter(x=>x.id!==id);
+    save(); render();
+  }
+});
+
+// search filter
+searchInput.addEventListener('input', ()=> {
+  const q = searchInput.value.trim().toLowerCase();
+  if(!q) return render();
+  render(products.filter(p => p.name.toLowerCase().includes(q)));
+});
+
+// import (JSON, CSV, YAML, XLSX)
+btnImport.addEventListener('click', async ()=>{
+  const f = fileInput.files[0];
+  if(!f) return alert('Selecciona un archivo');
+  const name = f.name.toLowerCase();
+  const text = await f.text();
+  try {
+    let parsed = [];
+    if(name.endsWith('.json')) parsed = JSON.parse(text);
+    else if(name.endsWith('.csv')) {
+      // simple CSV parse
+      const rows = text.split(/\r?\n/).filter(Boolean);
+      const headers = rows.shift().split(',');
+      parsed = rows.map(r => {
+        const cols = r.split(',');
+        const obj = {};
+        headers.forEach((h,i)=> obj[h.trim()]=cols[i]?.trim()||'');
+        return obj;
+      });
+    } else if(name.endsWith('.yml')||name.endsWith('.yaml')) parsed = jsyaml.load(text);
+    else if(name.endsWith('.xlsx')||name.endsWith('.xls')) {
+      const data = new Uint8Array(await f.arrayBuffer());
+      const wb = XLSX.read(data, {type:'array'});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      parsed = XLSX.utils.sheet_to_json(sheet);
+    } else throw new Error('Formato no soportado');
+    // Normalize parsed array -> products
+    const incoming = Array.isArray(parsed) ? parsed : [parsed];
+    incoming.forEach(item=>{
+      const name = item.name || item.nombre || item.title || item[Object.keys(item)[0]] || 'sin nombre';
+      const price = Number(item.price || item.precio || item.cost || 0) || 0;
+      const quantity = Number(item.quantity || item.cantidad || item.qty || 0) || 0;
+      products.unshift({ id: uid(), name, price, quantity });
+    });
+    save(); render(); alert('Importado: ' + incoming.length + ' items');
+  } catch(err){ console.error(err); alert('Error importando: ' + err.message); }
+});
+
+// export JSON / CSV
+btnExportJson.addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(products, null, 2)], {type:'application/json'});
+  downloadBlob(blob, 'inventory.json');
+});
+btnExportCsv.addEventListener('click', ()=>{
+  if(!products.length) return alert('No hay datos');
+  const headers = ['id','name','price','quantity'];
+  const rows = products.map(p => [p.id, p.name, p.price, p.quantity].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  downloadBlob(new Blob([csv], {type:'text/csv'}), 'inventory.csv');
+});
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 300);
+}
+
+// clear storage
+btnClearStorage.addEventListener('click', ()=>{
+  if(!confirm('Borrar todo el inventario guardado?')) return;
+  products = []; save(); render();
+});
+
+// mini-IA local (preguntas simples sobre inventario)
+askBtn.addEventListener('click', ()=>{
+  const q = (questionInput.value||'').toLowerCase();
+  if(!q) return;
+  if(q.includes('cuánt') && q.includes('caja')) {
+    const totalQty = products.reduce((s,p)=> s + Number(p.quantity||0), 0);
+    answerBox.textContent = `Hay ${totalQty} unidades en inventario.`;
+    return;
+  }
+  if(q.includes('valor') || q.includes('dinero')) {
+    const total = products.reduce((s,a)=> s + (Number(a.price)||0) * (Number(a.quantity)||0), 0);
+    answerBox.textContent = `Valor total aproximado: $${total.toFixed(2)}`;
+    return;
+  }
+  answerBox.textContent = 'No entiendo la pregunta. Prueba: "¿Cuántas cajas hay?" o "¿Valor inventario?"';
+});
+
+// init
+function init(){
+  products = load();
+  if(!Array.isArray(products)) products = [];
+  render();
+}
+init();
+
+// helper to switch sections
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=> s.classList.add('hidden'));
+  const el = document.getElementById(id);
+  if(el) el.classList.remove('hidden');
+}
+
+</script>
+</body>
+</html>
+
+<!----
+```
+
+---
+
+### Pasos rápidos para pegar y ver en GitHub Pages (sin terminal)
+1. En tu repo crea carpetas: **assets/css/** y **assets/js/** (desde web: Add file → Create new file usando rutas).  
+2. Pega los contenidos anteriores en: index.html, assets/css/style.css, assets/js/app.js.  
+3. Sube tus imágenes a carpeta **photos/** si las necesitas visualizar más tarde. (este proyecto no carga imágenes por item pero puedes extenderlo).  
+4. En GitHub → Settings → Pages activa publicación desde rama **main** y carpeta **root**.  
+5. Abre la URL que GitHub Pages te ofrece y prueba la app.
+
+---
+
+### Consejos prácticos y siguientes pasos que puedo hacer por ti
+- Puedo añadir soporte para mostrar imágenes por producto (usa un campo image en productos; si quieres lo implemento).  
+- Puedo generar la GitHub Action que lea /photos y cree data/media.json automáticamente (como hicimos para las galerías).  
+- Puedo convertir el contenido del archivo que adjuntaste a un media.json o CSV ya formateado si me confirmas si quieres importar los nombres de ejemplo.  
+- Si quieres, simplifico y hago un único README.md con instrucciones paso-a-paso para mantener orden en tus muchos códigos.
+
+Quieres que ahora añada campo de imagen y que los productos muestren miniatura usando photos/<filename>?

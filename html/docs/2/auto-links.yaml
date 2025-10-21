@@ -1,0 +1,483 @@
+### Generador automático de menú y navegación (resumen)
+Te doy tres cosas listas para copiar/pegar:
+1. Un GitHub Action que genera automáticamente `site/nav.json` con la lista de todos los HTML del repo cada vez que haces push.  
+2. Un pequeño fragmento JS/CSS que incluyes en cada `index.html` (o en tu plantilla) para crear el aside (menu), enlaces Prev/Next y link a “carpeta anterior”/“siguiente” usando `nav.json`.  
+3. Opciones y notas sobre personalización (orden, etiquetas, rutas amigables).
+
+---
+
+### 1) GitHub Action: crear site/nav.json con todos los HTML
+Crea `.github/workflows/gen-nav.yml` en tu repo:
+
+```yaml
+name: Generar nav.json (lista de HTML)
+on:
+  push:
+    paths:
+      - '**/*.html'
+      - '.github/workflows/gen-nav.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generar site/nav.json
+        run: |
+          set -e
+          OUT_DIR="site"
+          OUT_FILE="$OUT_DIR/nav.json"
+          mkdir -p "$OUT_DIR"
+          # Buscar archivos .html (excluir el archivo nav.json si existe dentro de site/)
+          find . -type f -name "*.html" ! -path "./.git/*" ! -path "./node_modules/*" ! -path "./$OUT_DIR/*" | sed 's|^\./||' | sort > /tmp/_html_files.txt
+          echo "[" > "$OUT_FILE"
+          first=true
+          while IFS= read -r f; do
+            # skip if empty
+            [ -z "$f" ] && continue
+            # generar título base desde filename (puedes modificar para extraer <title>)
+            title=$(basename "$f")
+            title=${title%.html}
+            # url relativa (para GitHub Pages servida desde root)
+            url="/$f"
+            # construir objeto JSON (escape)
+            name_escaped=$(python3 - <<PY
+import json,sys
+print(json.dumps("$title")[1:-1])
+PY
+)
+            url_escaped=$(python3 - <<PY
+import json,sys
+print(json.dumps("$url")[1:-1])
+PY
+)
+            entry=$(cat <<EOF
+{
+  "title": "$name_escaped",
+  "path": "$f",
+  "url": "$url_escaped"
+}
+EOF
+)
+            if [ "$first" = true ]; then
+              echo "$entry" >> "$OUT_FILE"
+              first=false
+            else
+              echo "," >> "$OUT_FILE"
+              echo "$entry" >> "$OUT_FILE"
+            fi
+          done < /tmp/_html_files.txt
+          echo "]" >> "$OUT_FILE"
+          git add "$OUT_FILE"
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore: actualizar site/nav.json (automático)"
+            git push
+          else
+            echo "Sin cambios en $OUT_FILE"
+          fi
+```
+
+Qué hace:
+- Recorre todo el repo buscando `.html` (excluye `.git`, node_modules y `site/`).
+- Crea `site/nav.json` con objetos { title, path, url } (orden alfabético).
+- Hace commit/push si `nav.json` cambió.
+
+---
+
+### 2) Código para el front-end: cargar nav.json y pintar aside + prev/next
+Pega este bloque donde cargues tu plantilla (ideal en el footer o justo antes de `</body>`). Crea un contenedor en tu HTML donde quieras que aparezca el aside y el nav inferior:
+
+En tu plantilla HTML (ejemplo mínimo):
+```html
+<!-- lugar para aside -->
+<aside id="site-aside" class="left"></aside>
+
+<!-- lugar para contenido principal -->
+<main id="main-content">
+  <!-- ... tu contenido ... -->
+  <div id="nav-footer"></div> <!-- prev/next links -->
+</main>
+```
+
+JS y CSS (copiar entero antes de `</body>`):
+```html
+<style>
+  .site-aside { width: 240px; padding:12px; border-right:1px solid #eee; box-sizing:border-box; }
+  .site-aside ul{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; }
+  .site-aside a{ text-decoration:none; color:#0b5cff; padding:6px 8px; border-radius:6px; display:inline-block; }
+  .site-aside a.active{ background:#eef6ff; font-weight:600; }
+  .nav-footer{ margin-top:18px; display:flex; gap:12px; align-items:center; }
+  .nav-btn{ padding:8px 12px; border-radius:8px; background:#f4f6fb; color:#111; text-decoration:none; border:1px solid #e6e9f2; }
+  @media(max-width:900px){ .site-aside{ display:none } }
+</style>
+
+<script>
+  (async function(){
+    const ASIDE_ID = 'site-aside';
+    const FOOTER_ID = 'nav-footer';
+    const NAV_JSON = '/site/nav.json'; // ruta generada por la Action
+
+    // cargar nav.json
+    let list = [];
+    try {
+      const r = await fetch(NAV_JSON, {cache: 'no-cache'});
+      if (!r.ok) throw new Error('Nav JSON no encontrado');
+      list = await r.json();
+    } catch(e) {
+      console.error('No se pudo cargar nav.json', e);
+      return;
+    }
+
+    // construir aside
+    const aside = document.getElementById(ASIDE_ID);
+    if (aside) {
+      aside.classList.add('site-aside');
+      const ul = document.createElement('ul');
+      list.forEach(item => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = item.url;
+        a.textContent = item.title || item.path;
+        // marcar active si ruta actual coincide
+        if (location.pathname.endsWith(item.path) || location.pathname === item.url || location.href.endsWith(item.path)) {
+          a.classList.add('active');
+        }
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+      aside.appendChild(ul);
+    }
+
+    // Prev / Next logic
+    const footer = document.getElementById(FOOTER_ID);
+    if (footer) {
+      const currentIndex = list.findIndex(i => location.pathname.endsWith(i.path) || location.href.endsWith(i.path) || location.pathname === i.url);
+      const prev = currentIndex > 0 ? list[currentIndex-1] : null;
+      const next = currentIndex >= 0 && currentIndex < list.length-1 ? list[currentIndex+1] : null;
+
+      const wrap = document.createElement('div'); wrap.className = 'nav-footer';
+      if (prev) {
+        const aPrev = document.createElement('a');
+        aPrev.className = 'nav-btn';
+        aPrev.href = prev.url;
+        aPrev.textContent = '← ' + (prev.title || prev.path);
+        wrap.appendChild(aPrev);
+      }
+      // botón a carpeta anterior (simple heurístico: carpeta del path)
+      const folderBtn = document.createElement('a');
+      folderBtn.className = 'nav-btn';
+      const curPath = (location.pathname && location.pathname.replace(/^\//,'')) || '';
+      const curDir = curPath.includes('/') ? curPath.split('/').slice(0,-1).join('/') : '';
+      const parentPath = curDir ? '/' + curDir + '/' : '/';
+      folderBtn.href = parentPath;
+      folderBtn.textContent = 'Carpeta ↑';
+      wrap.appendChild(folderBtn);
+
+      if (next) {
+        const aNext = document.createElement('a');
+        aNext.className = 'nav-btn';
+        aNext.href = next.url;
+        aNext.textContent = (next.title || next.path) + ' →';
+        wrap.appendChild(aNext);
+      }
+      footer.appendChild(wrap);
+    }
+  })();
+</script>
+```
+
+Cómo funciona:
+- `site/nav.json` contiene todos los HTML con `url` absoluta en forma `/ruta/archivo.html`.
+- El script carga `nav.json`, pinta una lista en el aside y marca la página activa (por coincidencia con `location.pathname`).
+- Calcula Prev/Next por posición en la lista ordenada y añade botón “Carpeta ↑” que lleva a la carpeta padre (simple heurística con la ruta).
+- No hace cambios en tus archivos HTML; es solo cliente.
+
+---
+
+### 3) Personalización y mejoras (opciones)
+- Títulos legibles: el Action usa el nombre de archivo como title. Si quieres títulos bonitos, añade un pequeño front-matter JSON o un archivo `pages/meta.csv` y modifica la Action para leerlo y reemplazar `title`. Ejemplo: un `meta.json` con { "path/to/page.html": "Mi título bonito" } y en el Action mezclarlo.
+- Orden: la Action ordena alfabéticamente. Puedes ordenar por carpeta, fecha (usando git log en la Action) o agregar un prefijo numérico `01-home.html` para controlar el orden.
+- Aside fijo: si quieres el aside siempre visible, ajusta CSS; para mobile puedes crear un botón que abra/cierre el menú.
+- Multi-repositorio / subcarpetas: la Action lista todo; si quieres sólo una carpeta, cambia `find` para buscar `site/pages/*.html`.
+- Prev/Next por carpeta: para hacer Prev/Next solo entre archivos de la misma carpeta, filtra `list` por `path` que compartan la misma carpeta antes de buscar índice.
+
+---
+
+### 4) Integración con tu flujo actual
+- Sube la Action, haz push; al ejecutarse generará `site/nav.json` en tu repo.  
+- Añade el JS/CSS en tu plantilla y publica with GitHub Pages en `user.github.io/repo/`.  
+- Cada push que añada o quite `.html` actualizará `site/nav.json` y así tu menú se mantendrá sincronizado.
+
+---
+
+### 5) Consejo final sobre escala y administración
+- Si tienes muchísimas páginas, agrega paginación al aside o agrupa por carpetas (Action puede producir un `groups` en el JSON).  
+- Mantén un pequeño `meta.json` para títulos y orden manual cuando necesites control fino.  
+- Si quieres, te doy la versión del Action que extrae el <title> del HTML (más precisa) y la Action que produce grupos por carpeta.
+
+Dime si quieres que:
+1. La Action extraiga el <title> de cada HTML y lo use en `nav.json`.  
+2. Te dé la versión que agrupa por carpeta y añade paginación en el aside.
+
+
+### Acción: generar site/nav.json extrayendo el <title> de cada HTML
+
+Crea el archivo `.github/workflows/gen-nav-with-title.yml` en tu repo. Esta Action recorre los archivos `.html`, extrae el contenido de la etiqueta `<title>` (si existe) y genera `site/nav.json` con objetos { title, path, url, folder }. Hace commit solo si hay cambios.
+
+```yaml
+name: Generar site/nav.json con títulos
+on:
+  push:
+    paths:
+      - '**/*.html'
+      - '.github/workflows/gen-nav-with-title.yml'
+jobs:
+  gen-nav:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout completo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Instalar dependencias ligeras
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y python3 jq
+
+      - name: Generar site/nav.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT_DIR="site"
+          OUT_FILE="$OUT_DIR/nav.json"
+          mkdir -p "$OUT_DIR"
+          TMP="/tmp/_html_list.txt"
+          # Buscar .html (excluir .git y la carpeta site)
+          find . -type f -name "*.html" ! -path "./.git/*" ! -path "./$OUT_DIR/*" | sed 's|^\./||' | sort > "$TMP"
+
+          echo "[" > "$OUT_FILE"
+          first=true
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+
+            # Leer <title> con python para manejar encoding y etiquetas multilinea
+            title=$(python3 - <<PY
+import sys,io,re
+p = sys.argv[1]
+with io.open(p, 'r', encoding='utf-8', errors='ignore') as f:
+    s = f.read(1000000)
+m = re.search(r'<title[^>]*>(.*?)<\/title>', s, re.IGNORECASE|re.DOTALL)
+if m:
+    t = m.group(1).strip()
+else:
+    # fallback: usar filename sin extension
+    import os
+    t = os.path.splitext(os.path.basename(p))[0]
+# escape for JSON (without surrounding quotes)
+import json
+print(json.dumps(t)[1:-1])
+PY
+            "$file")
+
+            # Normalizar URL para GitHub Pages (ruta relativa desde root)
+            url="/$file"
+            # folder padre (sin nombre de archivo)
+            folder="$(dirname "$file")"
+            if [ "$folder" = "." ]; then folder=""; fi
+
+            # construir objeto JSON (seguro para comillas)
+            title_escaped=$(python3 - <<PY
+import json,sys
+print(json.dumps(sys.stdin.read().strip())[1:-1])
+PY
+<<<"$title")
+
+            url_escaped=$(python3 - <<PY
+import json,sys
+print(json.dumps(sys.stdin.read().strip())[1:-1])
+PY
+<<<"$url")
+
+            path_escaped=$(python3 - <<PY
+import json,sys
+print(json.dumps(sys.stdin.read().strip())[1:-1])
+PY
+<<<"$file")
+
+            folder_escaped=$(python3 - <<PY
+import json,sys
+print(json.dumps(sys.stdin.read().strip())[1:-1])
+PY
+<<<"$folder")
+
+            entry=$(cat <<EOF
+{
+  "title": "$title_escaped",
+  "path": "$path_escaped",
+  "url": "$url_escaped",
+  "folder": "$folder_escaped"
+}
+EOF
+)
+
+            if [ "$first" = true ]; then
+              echo "$entry" >> "$OUT_FILE"
+              first=false
+            else
+              echo "," >> "$OUT_FILE"
+              echo "$entry" >> "$OUT_FILE"
+            fi
+
+          done < "$TMP"
+
+          echo "]" >> "$OUT_FILE"
+
+          # Commit si hubo cambios
+          git add "$OUT_FILE"
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore: actualizar site/nav.json (automático con títulos)"
+            git push
+          else
+            echo "Sin cambios en $OUT_FILE"
+          fi
+```
+
+---
+
+### Uso en el frontend: aside, Prev/Next y agrupado por carpeta
+
+Coloca este fragmento en tu plantilla (por ejemplo, antes de `</body>`). Asume que `site/nav.json` está disponible en la ruta `/site/nav.json`. Crea en cada página los contenedores donde se insertará el menú y la navegación:
+
+Ejemplo HTML mínimo donde incluir:
+```html
+<aside id="site-aside" class="left"></aside>
+<main id="main-content">
+  <!-- contenido -->
+  <div id="nav-footer"></div>
+</main>
+```
+
+Script + estilos (pegar antes de `</body>`):
+```html
+<style>
+  .site-aside { width:240px;padding:12px;border-right:1px solid #eee;box-sizing:border-box }
+  .site-aside ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+  .site-aside a{display:inline-block;padding:6px 8px;border-radius:6px;color:#0b5cff;text-decoration:none}
+  .site-aside a.active{background:#eef6ff;font-weight:600}
+  .nav-footer{margin-top:18px;display:flex;gap:12px;align-items:center}
+  .nav-btn{padding:8px 12px;border-radius:8px;background:#f4f6fb;color:#111;text-decoration:none;border:1px solid #e6e9f2}
+  @media(max-width:900px){ .site-aside{display:none} }
+</style>
+
+<script>
+(async function(){
+  const NAV_JSON = '/site/nav.json';
+  let list = [];
+  try {
+    const r = await fetch(NAV_JSON, {cache: 'no-cache'});
+    if (!r.ok) throw new Error('Nav JSON no encontrado: ' + r.status);
+    list = await r.json();
+  } catch(e) {
+    console.error('Error cargando nav.json', e);
+    return;
+  }
+
+  // Normalize current path (strip leading slash)
+  const curPath = (location.pathname || '').replace(/^\//,'').replace(/\/$/,'');
+  // Build aside
+  const aside = document.getElementById('site-aside');
+  if (aside) {
+    aside.classList.add('site-aside');
+    const groups = groupByFolder(list);
+    for (const folder of Object.keys(groups).sort()) {
+      const h = document.createElement('div');
+      h.style.fontSize='13px'; h.style.margin='8px 0 4px'; h.style.fontWeight=700;
+      h.textContent = folder || 'Root';
+      aside.appendChild(h);
+      const ul = document.createElement('ul');
+      groups[folder].forEach(item => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = item.url;
+        a.textContent = item.title || item.path;
+        if (item.path.replace(/\/$/,'') === curPath) a.classList.add('active');
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+      aside.appendChild(ul);
+    }
+  }
+
+  // Prev / Next (entre archivos del mismo folder)
+  const footer = document.getElementById('nav-footer');
+  if (footer) {
+    const curIndex = list.findIndex(i => i.path.replace(/\/$/,'') === curPath);
+    let prev = null, next = null;
+    if (curIndex !== -1) {
+      // Ordenar por folder then title for consistent next/prev
+      const folder = list[curIndex].folder || '';
+      const sameFolder = list.filter(i => (i.folder||'') === folder).sort((a,b) => (a.title||a.path).localeCompare(b.title||b.path));
+      const idx = sameFolder.findIndex(i => i.path.replace(/\/$/,'') === curPath);
+      if (idx > 0) prev = sameFolder[idx-1];
+      if (idx >= 0 && idx < sameFolder.length - 1) next = sameFolder[idx+1];
+    }
+    const wrap = document.createElement('div'); wrap.className = 'nav-footer';
+    if (prev) {
+      const a = document.createElement('a'); a.className='nav-btn'; a.href = prev.url; a.textContent = '← ' + (prev.title || prev.path);
+      wrap.appendChild(a);
+    }
+    // Carpeta padre heurística
+    const parentBtn = document.createElement('a'); parentBtn.className='nav-btn';
+    const curDir = curPath.includes('/') ? curPath.split('/').slice(0,-1).join('/') : '';
+    parentBtn.href = curDir ? '/' + curDir + '/' : '/';
+    parentBtn.textContent = 'Carpeta ↑';
+    wrap.appendChild(parentBtn);
+
+    if (next) {
+      const a2 = document.createElement('a'); a2.className='nav-btn'; a2.href = next.url; a2.textContent = (next.title || next.path) + ' →';
+      wrap.appendChild(a2);
+    }
+    footer.appendChild(wrap);
+  }
+
+  // Helpers
+  function groupByFolder(items){
+    const g = {};
+    items.forEach(it => {
+      const key = it.folder || '';
+      g[key] = g[key] || [];
+      g[key].push(it);
+    });
+    // sort entries by title
+    for (const k in g) g[k].sort((a,b)=> (a.title||a.path).localeCompare(b.title||b.path));
+    return g;
+  }
+})();
+</script>
+```
+
+---
+
+### Instrucciones rápidas y recomendaciones
+- Sube la Action a `.github/workflows/` y haz push. La primera ejecución generará `site/nav.json`.
+- Añade el HTML de aside y el script en tus plantillas (o pega en cada página mientras las conviertes a plantilla).
+- Comprueba en Pages: `https://TU_USUARIO.github.io/TU_REPO/archivo.html` y verás el aside con títulos y Prev/Next.
+- Si quieres títulos más elegantes, asegúrate de que cada HTML tenga una etiqueta `<title>` significativa.
+- Si prefieres que las URLs en `nav.json` no empiecen con `/` (por ejemplo para repos servidos en subpath), ajusta `url="/$file"` en la Action a `url="/TU_REPO/$file"` o usa un campo base en el script.
+
+---
+
+Si quieres, en el siguiente paso te doy:
+1. La versión del Action que además extrae meta descripción o h1 (si quieres resúmenes en el aside).  
+2. Un fragmento CSS/JS para paginación del aside cuando haya muchísimas páginas.  
+
+¿Cuál prefieres ahora?

@@ -1,0 +1,142 @@
+
+<!--
+
+
+<!DOCTYPE html>
+
+<html>
+<head>
+				<meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
+				<title>Hello, World!</title>
+</head>
+<body>
+				<h1>
+								Hello, World!
+				</h1>
+</body>
+</html>
+
+<!--   CS JSON?
+
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}
+
+
+-->
+
+https://m.youtube.com/watch?v=N2Y2vQ-1m7M&list=RDXhcDhiqhoic&index=8&pp=8AUB
+
+rpc
+
+
+<!--
+
+@{
+
+// api/contador.js (Vercel serverless)
+//    const { createClient } = require('@supabase/supabase-js');
+	//											const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+//						module.exports = async (req, res) => {
+//		  if(req.method !== 'POST') return res.status(405).end();
+ //	 const { key = 'visitas_home' } = req.body;
+  // Upsert simple en tabla counters (id, value)
+//						  const { data, error } = await supabase
+    .from('counters')
+    .upsert([{ id: key, value: 'increment' }], { onConflict: 'id' });
+
+  // Alternativamente usar rpc para incrementar atómico
+  // Aquí asume que tienes una función SQL que incrementa y devuelve el valor.
+//						  const result = await supabase.rpc('increment_counter', { counter_id: key });
+  if(result.error) return res.status(500).json({ error: result.error });
+  return res.json({ value: result.data });
+};
+async function inc() {
+  const r = await fetch('/api/contador', { method: 'POST', body: JSON.stringify({key:'home'})});
+  const j = await r.json();
+  document.getElementById('visitas').textContent = j.value;
+}
+window.addEventListener('DOMContentLoaded', inc);
+
+}
+
+
+
+-->
+
+<!DOCTYPE html>
+
+<html>
+<head>
+				<meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
+				<title>cshtml</title>
+</head>
+<body>
+				<h1>
+								Vincularcion DB noSQL
+				</h1>
+				<iframe src="https://www.instagram.com/blue.forest.8?igsh=YzljYTk1ODg3Zg==">
+										</iframe>
+								<iframe src="https://help.instagram.com/697961817256175/?helpref=uf_share">
+												
+						</iframe>https://help.instagram.com/697961817256175/?helpref=uf_share
+				<script>
+  const namespace = "ozclef";          // tu nombre/alias (elige único)
+  const key = "visitas-home";         // nombre del contador
+
+  async function incAndShow() {
+    try {
+      // incrementa y devuelve el valor nuevo
+      const res = await fetch(`https://api.countapi.xyz/hit/${namespace}/${key}`);
+      const data = await res.json();
+      // data.value contiene el número
+      document.getElementById('visitas').textContent = data.value;
+    } catch(err) {
+      console.error('Error contador:', err);
+    }
+  }
+
+  // Llamar al cargar la página
+  window.addEventListener('DOMContentLoaded', incAndShow);
+</script>
+
+<!-- en tu HTML -->
+<p>Visitas: <span id="visitas">cargando...</span></p>
+<!-- SDK (copiar desde Firebase console tu config real) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+  // reemplaza con tu config desde Firebase Console
+  const firebaseConfig = {
+    apiKey: "TU_API_KEY",
+    authDomain: "TU_PROYECTO.firebaseapp.com",
+    databaseURL: "https://TU_PROYECTO.firebaseio.com",
+    projectId: "TU_PROYECTO",
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  async function increaseVisit() {
+    const ref = db.ref('counters/visitas_home');
+    // transacción segura (evita race conditions)
+    ref.transaction(current => (current || 0) + 1)
+      .then(result => {
+        document.getElementById('visitas').textContent = result.snapshot.val();
+      })
+      .catch(err => console.error(err));
+  }
+
+  window.addEventListener('DOMContentLoaded', increaseVisit);
+</script>
+
+<p>Visitas: <span id="visitas">cargando...</span></p>
+
+				
+</body>
+</html>
+
+

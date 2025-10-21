@@ -1,0 +1,79 @@
+
+
+/*
+<!-- ===========================
+     ESTILOS: todo embebido (sin .css externo)
+     Comentarios explicativos incluidos
+     =========================== -->
+<style>
+*/
+
+  :root{
+    --panel-w: 260px;         /* ancho de sidebars */
+    --gap: 16px;              /* separación entre columnas */
+    --bg: #f3f4f6;
+    --accent-start: #4f46e5;  /* color gradiente */
+    --accent-end: #3b82f6;
+  }
+  * { box-sizing: border-box; }
+  html,body { height:100%; margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg); color:#111827; }
+
+  /* NAVBAR superior fijo */
+  .navbar {
+    position:fixed; top:0; left:0; right:0;
+    height:56px; display:flex; align-items:center; justify-content:space-between;
+    padding:0 16px;
+    background: linear-gradient(90deg,var(--accent-start),var(--accent-end));
+    color:#fff; z-index:1200;
+    box-shadow: 0 2px 8px rgba(2,6,23,0.08);
+  }
+  .navbar .brand { font-weight:700; letter-spacing:0.2px; }
+  .navbar button { background: rgba(255,255,255,0.12); border:0; color:#fff; padding:6px 10px; border-radius:6px; cursor:pointer; }
+
+  /* LAYOUT: 3 columnas (left / main / right) */
+  .layout {
+    display:grid;
+    grid-template-columns: var(--panel-w) 1fr var(--panel-w);
+    gap:var(--gap);
+    height: calc(100vh - 56px); /* restamos navbar */
+    padding: calc(var(--gap) + 8px);
+    padding-top: calc(56px + var(--gap)); /* evita solapamiento del navbar */
+  }
+
+  aside {
+    background:#fff; border-radius:10px; padding:14px; overflow:auto;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+  }
+  main {
+    background:#fff; border-radius:10px; padding:18px; overflow:auto;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+  }
+
+  /* responsive: en móvil las sidebars se ocultan y quedan toggles */
+  @media (max-width:900px){
+    .layout { grid-template-columns: 1fr; padding: 12px; }
+    aside { display:none; position:fixed; top:56px; bottom:0; width:80%; z-index:1100; }
+    aside.active { display:block; }
+    aside.left { left:0; }
+    aside.right { right:0; }
+  }
+
+  /* estilo del mini-cheatsheet */
+  .cheat-preview { height:120px; border-radius:8px; border:1px dashed #ddd; padding:12px; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg,#fff,#fafafa); }
+  label { font-size:0.9rem; display:block; margin-top:8px; }
+  input[type="color"], input[type="range"], input[type="text"] { width:100%; padding:6px; margin-top:6px; border-radius:6px; border:1px solid #ddd; }
+
+  /* utilidades rápidas para tarjetas/controls */
+  .menu { display:flex; flex-direction:column; gap:8px; }
+  .menu a { display:block; padding:8px 10px; border-radius:6px; color:#111; text-decoration:none; border:1px solid transparent; }
+  .menu a:hover { background:#f3f4f6; border-color:#e6e6e6; }
+  .controls .row { display:flex; gap:8px; align-items:center; }
+  .small-btn { padding:6px 8px; border-radius:6px; border:1px solid #e2e2e2; background:#fff; cursor:pointer; }
+
+  /* favicon-like area for files list */
+  .files-list { max-height:220px; overflow:auto; border-radius:6px; border:1px solid #eee; background:#fff; padding:8px; }
+  .files-list div { padding:8px; border-bottom:1px solid #f3f3f3; font-size:0.95rem; cursor:pointer; }
+  .files-list div:last-child { border-bottom:0; }
+
+/*
+</style>

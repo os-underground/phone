@@ -1,0 +1,216 @@
+<!---------------
+### Workspace (vista previa + editor) — descripción breve
+Te doy un componente "Workspace" que puedes abrir como ventana dentro de tu OS. Tiene tres editores (HTML, CSS, JS) que se guardan en localStorage con claves propias, un botón para "Preview" que renderiza en tiempo real en un iframe aislado, y un botón para "Abrir en ventana separada" (pop-up) sin modificar los orígenes originales. Funciona con tu sistema de ventanas: se crea usando crearVentana(...) y se registra en el taskbar.
+
+---
+
+### 1) HTML: añade esto dentro de index.html donde tengas apps o usa crearVentana para generarlo dinámicamente
+```html
+<!-- Botón en Menú Principal -->
+<button onclick="abrirWorkspace()">🧩 Workspace (Editor + Preview)</button>
+```
+
+No olvides añadir un contenedor vacío opcional si quieres crear la ventana desde HTML:
+```html
+<!-- contenedor para ventanas dinámicas ya existe: #windows-container -->
+```
+
+---
+
+### 2) CSS (añadir a OS.css)
+```css
+/* Workspace styles */
+.workspace-editor { display:flex; gap:8px; height:320px; }
+.editor-col { flex:1; display:flex; flex-direction:column; gap:6px; min-width:0; }
+.editor-col textarea { flex:1; width:100%; resize:vertical; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.04); background:#0f1113; color:var(--text); font-family:monospace; font-size:13px; }
+.workspace-controls { display:flex; gap:8px; margin-top:8px; align-items:center; }
+.workspace-preview { border:1px solid rgba(255,255,255,0.04); height:260px; border-radius:6px; overflow:hidden; background:#fff; }
+.small-ctrl { padding:6px 10px; border-radius:6px; border:none; cursor:pointer; background:#2b2b2b; color:var(--text); }
+```
+
+---
+
+### 3) JavaScript (añadir a OS.js — funciones del workspace)
+```js
+/* Workspace: crea ventana, persistencia y preview */
+const WS_KEYS = { html: 'ws_html_v1', css: 'ws_css_v1', js: 'ws_js_v1' };
+
+function abrirWorkspace(){
+  // si ya existe, solo abrir y traer al frente
+  const existing = document.getElementById('workspace-window');
+  if (existing) { existing.style.display='block'; bringToFront(existing); return; }
+
+  const content = `
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="workspace-editor">
+        <div class="editor-col">
+          <label style="font-weight:600">HTML</label>
+          <textarea id="ws-html" placeholder="<!-- HTML -->"></textarea>
+        </div>
+        <div class="editor-col">
+          <label style="font-weight:600">CSS</label>
+          <textarea id="ws-css" placeholder="/* CSS */"></textarea>
+        </div>
+        <div class="editor-col">
+          <label style="font-weight:600">JS</label>
+          <textarea id="ws-js" placeholder="// JS"></textarea>
+        </div>
+      </div>
+
+      <div class="workspace-controls">
+        <button class="small-ctrl" onclick="ws_save()">Guardar</button>
+        <button class="small-ctrl" onclick="ws_preview()">Preview</button>
+        <button class="small-ctrl" onclick="ws_openPopup()">Abrir en ventana nueva</button>
+        <button class="small-ctrl" onclick="ws_reset()">Reset</button>
+        <span style="color:var(--muted);margin-left:8px;font-size:13px;">Auto-guardado en localStorage</span>
+      </div>
+
+      <div style="margin-top:8px">
+        <iframe id="ws-preview-frame" class="workspace-preview" sandbox="allow-scripts allow-forms allow-modals"></iframe>
+      </div>
+    </div>
+  `;
+
+  const id = crearVentana('Workspace', content);
+  const win = document.getElementById(id);
+  win.id = 'workspace-window';             // id fijo para facilitar control
+  // aseguramos presencia en taskbar
+  registerWindowForTaskbar(win, { title: 'Workspace', icon: '🧩' });
+
+  // cargar desde storage en los textareas
+  const h = localStorage.getItem(WS_KEYS.html) || '<!-- HTML -->\\n<div id="app">Hola Workspace</div>';
+  const c = localStorage.getItem(WS_KEYS.css)  || 'body{background:transparent} #app{padding:12px;color:#042}';
+  const j = localStorage.getItem(WS_KEYS.js)   || 'console.log("Workspace ready");';
+
+  document.getElementById('ws-html').value = h;
+  document.getElementById('ws-css').value = c;
+  document.getElementById('ws-js').value = j;
+
+  // preview inicial y auto-save mientras escribe
+  ws_preview();
+  // debounce auto-save
+  ['ws-html','ws-css','ws-js'].forEach(idtxt=>{
+    const el = document.getElementById(idtxt);
+    let timeout = null;
+    el.addEventListener('input', () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        ws_save();
+        ws_preview();
+      }, 600);
+    });
+  });
+}
+
+// guardar en localStorage
+function ws_save(){
+  const h = document.getElementById('ws-html')?.value || '';
+  const c = document.getElementById('ws-css')?.value || '';
+  const j = document.getElementById('ws-js')?.value || '';
+  localStorage.setItem(WS_KEYS.html, h);
+  localStorage.setItem(WS_KEYS.css, c);
+  localStorage.setItem(WS_KEYS.js, j);
+  // feedback breve
+  console.info('Workspace guardado');
+}
+
+// genera el documento completo y lo inyecta en el iframe usando srcdoc
+function ws_buildDoc() {
+  const h = document.getElementById('ws-html')?.value || '';
+  const c = document.getElementById('ws-css')?.value || '';
+  const j = document.getElementById('ws-js')?.value || '';
+  // envolvemos en HTML seguro
+  return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>${c}</style>
+</head>
+<body>
+${h}
+<script>
+try {
+${j}
+} catch(e) { document.body.insertAdjacentHTML('beforeend','<pre style="color:red;">Error: '+String(e)+'</pre>'); }
+</script>
+</body>
+</html>`;
+}
+
+// renderiza en el iframe sandbox (srcdoc)
+function ws_preview(){
+  const frame = document.getElementById('ws-preview-frame');
+  if (!frame) return;
+  const doc = ws_buildDoc();
+  // use srcdoc si está soportado
+  try {
+    frame.srcdoc = doc;
+  } catch (e) {
+    // fallback: blob URL
+    const blob = new Blob([doc], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    frame.src = url;
+    // liberar despues
+    setTimeout(()=> URL.revokeObjectURL(url), 10000);
+  }
+}
+
+// abre la preview en una ventana nueva (no toca tu origen)
+function ws_openPopup() {
+  const doc = ws_buildDoc();
+  const blob = new Blob([doc], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank', 'noopener,noreferrer');
+  // revoke opcional dejar tiempo para que la nueva ventana la cargue
+  setTimeout(()=> URL.revokeObjectURL(url), 5000);
+}
+
+// resetear (cuid: borra localStorage de workspace)
+function ws_reset() {
+  if (!confirm('Resetear contenido del workspace? Esto eliminará lo guardado.')) return;
+  localStorage.removeItem(WS_KEYS.html);
+  localStorage.removeItem(WS_KEYS.css);
+  localStorage.removeItem(WS_KEYS.js);
+  document.getElementById('ws-html').value = '';
+  document.getElementById('ws-css').value = '';
+  document.getElementById('ws-js').value = '';
+  ws_preview();
+}
+
+// Exponer funciones globales para botones inline
+window.abrirWorkspace = abrirWorkspace;
+window.ws_save = ws_save;
+window.ws_preview = ws_preview;
+window.ws_openPopup = ws_openPopup;
+window.ws_reset = ws_reset;
+```
+
+---
+
+### 4) Comportamiento y seguridad
+- El preview se ejecuta en un iframe sandbox con allow-scripts; así el código del usuario corre aislado del DOM principal.  
+- Abrir en ventana nueva usa Blob URL; la ventana carga el documento sin modificar tus archivos origen.  
+- Guardado: se usan claves separadas WS_KEYS.* en localStorage para no mezclar con otros datos del OS.  
+- No se toca ni modifica el código fuente original del OS: todo queda en localStorage o en la ventana dinámica.
+
+---
+
+### 5) Opciones avanzadas (si quieres)
+- Reemplazar los textarea por un editor como CodeMirror o Monaco para autocompletado y mejor UX (pero aumenta recursos).  
+- Añadir "Live reload" que envíe postMessage desde iframe al OS para avisos (por ejemplo errores o logs) usando postMessage seguro.  
+- Usar IndexedDB si quieres guardar proyectos completos con assets (mejor para blobs y muchos archivos).  
+- Añadir múltiples "workspaces" guardados como proyectos: guardar metadatos JSON con nombre y timestamp; listar e importar.
+
+---
+
+### 6) Integración final y rendimiento
+- Mantén editor en textarea si quieres bajo consumo. CodeMirror/Monaco brindan poder pero incrementan carga.  
+- Para limitar recursos: destruye preview iframe (`frame.src = 'about:blank'`) cuando minimizas la ventana; vuelve a renderizar al restaurar.  
+- Puedes limitar número de ventanas de navegador activas: antes de crear una nueva ventana tipo browser, comprueba count de iframes activos y rechaza o reutiliza la existente.
+
+---
+
+Si quieres, te pego ahora:
+- versión de index.html con el botón del Workspace ya colocado,  
+- la porción de OS.css completa (con tus estilos + workspace),  
+- y una OS.js final que incluya exactamente este bloque integrado y añade lógica para destruir/rehabilitar iframe al minimizar/restaurar. ¿Lo quieres tal cual para copiar/pegar?

@@ -1,0 +1,363 @@
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Docmt Pdf</title>
+  <style>
+    body {
+      font-family: Georgia, serif;
+      background: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+    }
+    section {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    p {
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+    address {
+      margin-top: 2rem;
+      font-style: normal;
+      text-align: right;
+    }
+    button {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      background: #0077cc;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-family: Georgia, serif;
+    }
+    label {
+      font-weight: bold;
+    }
+  </style>
+				
+				
+								
+				<style>
+	#documento {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fdfdfd;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  font-family: Georgia, serif;
+  line-height: 1.6;
+}
+#documento p {
+  margin-bottom: 1rem;
+}
+				
+				#solicitudes {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  font-family: "Georgia", serif;
+  line-height: 1.6;
+}
+
+#solicitudes h2 {
+  text-align: center;
+  font-size: 1.4rem;
+  margin-bottom: 1.2rem;
+}
+
+#solicitudes p {
+  margin-bottom: 1rem;
+}
+
+#solicitudes address {
+  margin-top: 2rem;
+  font-style: normal;
+  text-align: right;
+}
+
+				
+				</style>
+  <!-- DOCUMENTS -->
+  <style>
+  /* ====== RESET Y BASE ====== */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: sans-serif; background: #f3f4f6; }
+
+  /* ====== LAYOUT DESKTOP ====== */
+  .layout {
+    display: grid;
+    grid-template-columns: 25% 1.2fr 25%;
+    height: 100vh;
+  }
+  aside, main {
+    overflow-y: auto;
+    padding: 10px;
+  }
+  aside { background: #e5e7eb; }
+  main { background: #fff; }
+
+  /* ====== NAVBAR SUPERIOR ====== */
+  .navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 8vh;
+    background: linear-gradient(90deg, skyblue 0%, violet 100%);
+    color: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px solid black;
+    z-index: 1000;
+    margin: 3px solid black;
+  }
+  .navbar h1 { font-size: 1.2rem; }
+  .navbar button {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    padding: 5px 10px;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  /* ====== MOBILE ====== */
+  @media (max-width: 768px) {
+    .layout {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 0.7fr auto;
+    }
+    aside {
+      display: none; /* ocultar sidebars por defecto */
+    }
+    aside.active {
+      display: block;
+      position: fixed;
+      top: 80px;
+      bottom: 0;
+      width: 80%;
+      z-index: 999;
+    }
+    aside.left { left: 0; }
+    aside.right { right: 0; }
+  }
+
+  /* ====== IFRAMES ====== */
+  iframe {
+    width: 100%;
+    height: calc(100vh - 70px);
+    border: none;
+    background: white;
+  }
+ }
+</style>
+   <style>
+    body { font-family: sans-serif; background: #f3f4f6; padding: 10px; }
+  .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+  .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; }
+  .card-media { flex: 1 1 auto; overflow: auto; }
+  .card-media img, .card-media video, .card-media iframe { width: 100%; height: auto; display: block; }
+  .card-content { padding: 10px; background: #fafafa; border-top: 1px solid #eee; }
+  textarea { width: 90%; height: 100px; margin-top: 10px; }
+  }
+</style> 
+				
+				
+</head>
+<body>
+				
+
+ <div class="card" style="padding-top:70px; padding: 10px, 10px, 10px; background:skyblue 20%;">
+    <h1> iframe Generador </h1>
+    <h2> img, video, audio, </h2>
+    
+    <div class="card" style="width: 80%">
+      <div>
+  
+				<h1>
+								Solic. Psqu. Sandoval. - Oscar
+				</h1>
+				<section id="solicitudes">
+								
+  <article>
+  				<!--
+    
+  				-->
+  </article>
+</section>
+
+				
+				<div id="documento"></div>
+				
+				<nav>
+  <ul>
+    <li><a href="#solicitudes">Solicitudes</a></li>
+    <li><a href="#testimonios">Testimonios</a></li>
+    <li><a href="#portafolio">Portafolio</a></li>
+  </ul>
+</nav>
+
+				<section id="documento">
+								
+  <article>
+    <h2>Solicitud de constancia médica</h2>
+    <p><strong>[Ciudad], a [día] de [mes] de [año]</strong></p>
+    <p>Dr. Sandoval<br>Servicio de Psiquiatría<br>IMSS<br>Presente.</p>
+    <p><strong>Asunto:</strong> Solicitud de emisión de diagnóstico/constancia médica</p>
+    <p>Estimado Dr. Sandoval:</p>
+    <p>Por medio de la presente...</p>
+    <p>Atentamente,<br>[Tu nombre]</p>
+  </article>
+								-->
+</section>
+
+				
+				
+				<div id="documento"></div>
+
+      				
+<script>
+      				//
+  const texto = `
+  [Ciudad], a [día] de [mes] de [año]
+
+  Dr. Sandoval
+  Servicio de Psiquiatría
+  Instituto Mexicano del Seguro Social (IMSS)
+  Presente.
+
+  Asunto: Solicitud de emisión de diagnóstico/constancia médica para trámite escolar
+
+  Estimado Dr. Sandoval:
+
+  Por medio de la presente me permito solicitar...
+  
+  Atentamente,
+  [Tu nombre]
+  `;
+
+  // separa por saltos de línea y crea párrafos
+  const contenedor = document.getElementById("documento");
+  texto.split("\n").forEach(linea => {
+    if (linea.trim() !== "") {
+      const p = document.createElement("p");
+      p.textContent = linea;
+      contenedor.appendChild(p);
+    }
+  });
+</script>
+
+<script>
+      				
+  fetch("solicitud1.txt")
+    .then(resp => resp.text())
+    .then(data => {
+      const contenedor = document.getElementById("documento");
+      data.split("\n").forEach(linea => {
+        if (linea.trim() !== "") {
+          const p = document.createElement("p");
+          p.textContent = linea;
+          contenedor.appendChild(p);
+        }
+      });
+    });
+</script>
+      				
+  <!-- jsPDF desde CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      				
+  <script>
+    // Función para descargar cualquier sección como PDF
+    function descargarPDF(id) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const contenido = document.getElementById(id).innerText;
+      doc.setFont("times", "normal");
+      doc.setFontSize(12);
+      const margen = 15;
+      const ancho = 180;
+      doc.text(contenido, margen, 20, { maxWidth: ancho });
+      doc.save("solicitud.pdf");
+    }
+
+    // Generar carta editable
+    function generarSolicitud() {
+      const fecha = document.getElementById("fecha").value;
+      const menor = document.getElementById("menor").value;
+      const nacimiento = document.getElementById("nacimiento").value;
+      const escuela = document.getElementById("escuela").value;
+      const nombre = document.getElementById("nombre").value;
+      const tel = document.getElementById("tel").value;
+      const correo = document.getElementById("correo").value;
+
+      const texto = `
+        <h3>Solicitud de constancia médica</h3>
+        <p><strong>${fecha}</strong></p>
+        <p><strong>Dr. Sandoval</strong><br>
+        Servicio de Psiquiatría<br>
+        Instituto Mexicano del Seguro Social (IMSS)<br>
+        Presente.</p>
+
+        <p><strong>Asunto:</strong> Solicitud de emisión de diagnóstico/constancia médica para trámite escolar</p>
+
+        <p>Estimado Dr. Sandoval:</p>
+
+        <p>Por medio de la presente me permito solicitar de manera atenta la emisión de un diagnóstico o constancia médica para mi hermano <em>${menor}</em>, con fecha de nacimiento <em>${nacimiento}</em>, quien actualmente requiere presentar dicho documento para completar su inscripción en la escuela secundaria <em>${escuela}</em>.</p>
+
+        <p>Motivo de la solicitud: El documento original no se localiza y la institución educativa solicita una constancia actual de estado de salud para fines administrativos.</p>
+
+        <p>Agradezco su atención y quedo en espera de sus indicaciones.</p>
+
+        <address>
+          <p>Atentamente,<br>
+          ${nombre}<br>
+          Tel: ${tel} · Correo: ${correo}</p>
+        </address>
+
+        <button onclick="descargarPDF('resultado')">📄 Descargar PDF</button>
+      `;
+
+      document.getElementById("resultado").innerHTML = texto;
+    }
+  </script>
+</body>
+</html>

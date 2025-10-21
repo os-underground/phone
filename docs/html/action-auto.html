@@ -1,0 +1,367 @@
+<!---
+### Acción de GitHub (genera site/nav.json con <title>, primer <h1> y folder)
+Crea `.github/workflows/gen-nav-with-h1.yml` en tu repo. Escanea todos los `.html`, extrae `<title>` y el primer `<h1>`, calcula la carpeta padre y genera `site/nav.json` con objetos { title, h1, path, url, folder }. Hace commit solo si hay cambios.
+
+```yaml
+name: Generar site/nav.json con title y h1
+on:
+  push:
+    paths:
+      - '**/*.html'
+      - '.github/workflows/gen-nav-with-h1.yml'
+jobs:
+  gen-nav:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout completo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Instalar Python y utilidades
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y python3 jq
+
+      - name: Generar site/nav.json con title y primer h1
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT_DIR="site"
+          OUT_FILE="$OUT_DIR/nav.json"
+          mkdir -p "$OUT_DIR"
+          TMP="/tmp/_html_list.txt"
+          # listar .html (excluir .git y site/)
+          find . -type f -name "*.html" ! -path "./.git/*" ! -path "./$OUT_DIR/*" | sed 's|^\./||' | sort > "$TMP"
+
+          echo "[" > "$OUT_FILE"
+          first=true
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+
+            # Extraer <title> y primer <h1> usando Python (maneja encoding y multilinea)
+            read -r title h1 <<EOF
+$(python3 - <<PY
+import sys,io,re,os,json
+p = sys.argv[1]
+with io.open(p, 'r', encoding='utf-8', errors='ignore') as f:
+    s = f.read(2000000)
+# title
+m = re.search(r'<title[^>]*>(.*?)<\/title>', s, re.IGNORECASE|re.DOTALL)
+title = m.group(1).strip() if m else os.path.splitext(os.path.basename(p))[0]
+# first h1 (strip tags inside)
+m2 = re.search(r'<h1[^>]*>(.*?)<\/h1>', s, re.IGNORECASE|re.DOTALL)
+if m2:
+    # remove inner tags
+    h = re.sub(r'<[^>]+>', '', m2.group(1)).strip()
+else:
+    h = ""
+# print JSON-safe values separated by tab
+import json
+print(json.dumps(title))
+print(json.dumps(h))
+PY
+)" || true
+            # title & h1 now are quoted JSON strings on two lines; unquote them safely
+            title=$(printf '%s' "$title" | sed 's/^"//;s/"$//')
+            h1=$(printf '%s' "$h1" | sed 's/^"//;s/"$//')
+
+            # folder (parent dir)
+            folder="$(dirname "$file")"
+            if [ "$folder" = "." ]; then folder=""; fi
+
+            # url para GitHub Pages (relativa desde el root; ajusta si sirves en subpath)
+            url="/$file"
+
+            # escapar valores con python json.dumps para seguridad
+            title_escaped=$(python3 - <<PY
+import json,sys
+print(json.dumps(sys.stdin.read().strip())[1:-1])
+PY
+<<<"$title")
+            h1_escaped=$(python3 - <<PY
+import json,sys
+print(json.dumps(sys.stdin.read().strip())[1:-1])
+PY
+<<<"$h1")
+            path_escaped=$(python3 - <<PY
+import json,sys
+print(json.dumps(sys.stdin.read().strip())[1:-1])
+PY
+<<<"$file")
+            url_escaped=$(python3 - <<PY
+import json,sys
+print(json.dumps(sys.stdin.read().strip())[1:-1])
+PY
+<<<"$url")
+            folder_escaped=$(python3 - <<PY
+import json,sys
+print(json.dumps(sys.stdin.read().strip())[1:-1])
+PY
+<<<"$folder")
+
+            entry=$(cat <<EOF
+{
+  "title": "$title_escaped",
+  "h1": "$h1_escaped",
+  "path": "$path_escaped",
+  "url": "$url_escaped",
+  "folder": "$folder_escaped"
+}
+EOF
+)
+
+            if [ "$first" = true ]; then
+              echo "$entry" >> "$OUT_FILE"
+              first=false
+            else
+              echo "," >> "$OUT_FILE"
+              echo "$entry" >> "$OUT_FILE"
+            fi
+
+          done < "$TMP"
+
+          echo "]" >> "$OUT_FILE"
+
+          # Commit si hubo cambios
+          git add "$OUT_FILE"
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore: actualizar site/nav.json (auto con title+h1)"
+            git push
+          else
+            echo "Sin cambios en $OUT_FILE"
+          fi
+```
+
+---
+
+### Frontend completo (index.html) — HTML + CSS + JS
+Este archivo es una plantilla que puedes usar como `index.html` en la raíz (o como plantilla base). Carga `/site/nav.json`, muestra en el aside la lista agrupada por carpeta, añade búsqueda, prev/next por carpeta, y genera automáticamente enlaces <a> para todos los HTML detectados. Copia y pega tal cual, ajusta estilos si quieres.
+
+```html--->
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Índice del sitio</title>
+  <link rel="icon" href="favicon.ico">
+  <style>
+    :root{--maxw:1200px;--gap:14px}
+    body{font-family:Inter,system-ui,Arial;margin:18px auto;max-width:var(--maxw);padding:0 16px;color:#111}
+    header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0}
+    .search{flex:1;display:flex;gap:8px;align-items:center}
+    input[type="search"], select{padding:8px;border-radius:8px;border:1px solid #ddd;width:100%}
+    .layout{display:flex;gap:18px}
+    aside{width:300px;min-width:220px;border-right:1px solid #eee;padding:12px;border-radius:8px;background:#fafafa}
+    main{flex:1;padding:12px}
+    .folder-title{font-weight:700;margin:10px 0 6px}
+    ul.pages{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+    a.page-link{display:block;padding:8px;border-radius:8px;text-decoration:none;color:#0b5cff;background:transparent}
+    a.page-link:hover{background:#eef6ff}
+    a.active{background:#e6f0ff;font-weight:700}
+    .card{border:1px solid #eee;padding:12px;border-radius:10px;background:#fff;box-shadow:0 6px 18px rgba(10,10,10,.03);margin-bottom:12px}
+    .meta{font-size:13px;color:#666}
+    .nav-footer{display:flex;gap:10px;align-items:center;margin-top:8px}
+    .btn{padding:8px 12px;border-radius:8px;background:#f4f6fb;border:1px solid #e6e9f2;text-decoration:none;color:#111}
+    @media(max-width:980px){ .layout{flex-direction:column} aside{width:auto;order:2} main{order:1} }
+  </style>
+</head>
+<body>
+  <header>
+    <h2 style="margin:0">Mapa del sitio</h2>
+    <div class="search">
+      <input id="q" type="search" placeholder="Buscar por título, h1 o nombre de archivo..." />
+      <select id="filterFolder">
+        <option value="all">Todas las carpetas</option>
+      </select>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside id="site-aside" aria-label="Navegación del sitio">
+      <div id="folders"></div>
+    </aside>
+
+    <main>
+      <div id="results"></div>
+      <div id="nav-footer"></div>
+    </main>
+  </div>
+
+  <script>
+    const NAV_JSON = '/site/nav.json'; // generado por la Action
+    let LIST = [];
+
+    // util
+    function normalizePath(p){ return (p||'').replace(/^\//,'').replace(/\/$/,''); }
+    function byFolder(list){
+      const map = {};
+      list.forEach(i=>{
+        const f = i.folder || '';
+        if(!map[f]) map[f]=[];
+        map[f].push(i);
+      });
+      for(const k in map) map[k].sort((a,b)=> (a.title||a.path).localeCompare(b.title||b.path));
+      return map;
+    }
+    function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    async function load(){
+      try {
+        const r = await fetch(NAV_JSON, {cache: 'no-cache'});
+        if(!r.ok) throw new Error('No se encuentra ' + NAV_JSON);
+        LIST = await r.json();
+        renderFolders(LIST);
+        renderResults(LIST);
+        populateFolderFilter(LIST);
+        setupControls();
+      } catch(err){
+        document.getElementById('results').innerHTML = '<div class="card">Error cargando nav.json: '+err.message+'</div>';
+        console.error(err);
+      }
+    }
+
+    // render aside agrupado por folder
+    function renderFolders(list){
+      const c = document.getElementById('folders');
+      c.innerHTML = '';
+      const grouped = byFolder(list);
+      const keys = Object.keys(grouped).sort((a,b)=> a.localeCompare(b));
+      keys.forEach(folder=>{
+        const title = document.createElement('div');
+        title.className='folder-title';
+        title.textContent = folder || 'Root';
+        c.appendChild(title);
+
+        const ul = document.createElement('ul'); ul.className='pages';
+        grouped[folder].forEach(item=>{
+          const li = document.createElement('li');
+          const a = document.createElement('a'); a.className='page-link';
+          a.href = item.url;
+          a.innerHTML = `<strong>${escapeHtml(item.title)}</strong><div class="meta">${escapeHtml(item.h1 || '')} <span style="color:#999">• ${escapeHtml(item.path)}</span></div>`;
+          // marcar si es la página actual
+          const cur = normalizePath(location.pathname);
+          if (normalizePath(item.path) === cur) a.classList.add('active');
+          li.appendChild(a); ul.appendChild(li);
+        });
+        c.appendChild(ul);
+      });
+    }
+
+    // render lista principal (resultados, cards)
+    function renderResults(list){
+      const out = document.getElementById('results');
+      out.innerHTML = '';
+      if(!list || list.length === 0){
+        out.innerHTML = '<div class="card">No se encontraron páginas.</div>';
+        return;
+      }
+      list.forEach(item=>{
+        const card = document.createElement('div'); card.className='card';
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <a href="${item.url}" style="font-weight:700;color:#0b5cff;text-decoration:none">${escapeHtml(item.title)}</a>
+              <div class="meta">${escapeHtml(item.h1 || '')}</div>
+            </div>
+            <div style="text-align:right">
+              <div class="meta">${escapeHtml(item.folder || '')}</div>
+              <div class="meta" style="font-size:13px;color:#777">${escapeHtml(item.path)}</div>
+            </div>
+          </div>
+        `;
+        out.appendChild(card);
+      });
+    }
+
+    // poblar filtro de carpetas
+    function populateFolderFilter(list){
+      const sel = document.getElementById('filterFolder');
+      const folders = [...new Set(list.map(i=>i.folder||''))].sort();
+      folders.forEach(f=>{
+        const opt = document.createElement('option');
+        opt.value = f;
+        opt.textContent = f || 'Root';
+        sel.appendChild(opt);
+      });
+    }
+
+    // buscar y filtrar
+    function setupControls(){
+      const q = document.getElementById('q');
+      const folder = document.getElementById('filterFolder');
+
+      function apply(){
+        const term = q.value.trim().toLowerCase();
+        const f = folder.value;
+        const filtered = LIST.filter(i=>{
+          if(f !== 'all' && (i.folder||'') !== f) return false;
+          if(!term) return true;
+          return (i.title||'').toLowerCase().includes(term)
+            || (i.h1||'').toLowerCase().includes(term)
+            || (i.path||'').toLowerCase().includes(term);
+        });
+        renderResults(filtered);
+        renderFolders(filtered); // aside se actualiza para reflejar filtro
+      }
+
+      q.addEventListener('input', debounce(apply, 180));
+      folder.addEventListener('change', apply);
+    }
+
+    // Prev/Next por carpeta (coloca botones en nav-footer)
+    function renderPrevNext(){
+      const footer = document.getElementById('nav-footer');
+      footer.innerHTML = '';
+      const cur = normalizePath(location.pathname);
+      const idx = LIST.findIndex(i=>normalizePath(i.path) === cur);
+      if(idx === -1) return;
+      const folder = LIST[idx].folder || '';
+      const same = LIST.filter(i=> (i.folder||'') === folder).sort((a,b)=> (a.title||a.path).localeCompare(b.title||b.path));
+      const pos = same.findIndex(i=> normalizePath(i.path) === cur);
+      const wrap = document.createElement('div'); wrap.className='nav-footer';
+      if(pos > 0){
+        const p = same[pos-1];
+        const a = document.createElement('a'); a.className='btn'; a.href = p.url; a.textContent = '← ' + p.title;
+        wrap.appendChild(a);
+      }
+      const parentBtn = document.createElement('a'); parentBtn.className='btn';
+      const curDir = cur.includes('/') ? cur.split('/').slice(0,-1).join('/') : '';
+      parentBtn.href = curDir ? '/' + curDir + '/' : '/';
+      parentBtn.textContent = 'Carpeta ↑';
+      wrap.appendChild(parentBtn);
+      if(pos !== -1 && pos < same.length - 1){
+        const n = same[pos+1];
+        const a2 = document.createElement('a'); a2.className='btn'; a2.href = n.url; a2.textContent = n.title + ' →';
+        wrap.appendChild(a2);
+      }
+      footer.appendChild(wrap);
+    }
+
+    // debounce
+    function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+
+    // iniciar
+    (async function(){
+      await load();
+      renderPrevNext();
+    })();
+  </script>
+</body>
+</html>
+  <!-------
+### Cómo usar todo junto (pasos rápidos)
+1. Añade el workflow YAML a `.github/workflows/` y haz push. La Action generará `site/nav.json` en la rama principal.  
+2. Asegúrate de que cada página HTML tenga un `<title>` y, si puedes, un `<h1>` significativo (la Action extrae el primero que encuentre).  
+3. Sube `index.html` (o la plantilla) a la raíz del repo y publica en GitHub Pages (user.github.io/repo/).  
+4. Cada push que agregue o elimine archivos `.html` actualizará `site/nav.json` automáticamente. El frontend cargará ese JSON y generará el aside y los enlaces <a> automáticamente.
+
+---
+
+¿Quieres ahora que:
+1. La Action también genere una versión paginada del aside (site/nav-page-1.json, etc.) para repos con muchísimas páginas?  
+2. La Action busque metadatos adicionales (meta description o extraer el primer <meta name="author">) y los incluya en el JSON?
